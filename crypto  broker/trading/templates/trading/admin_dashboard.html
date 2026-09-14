@@ -1,0 +1,965 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Trading Admin Dashboard</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #0b1120;
+            color: #e5e7eb;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: #111827;
+            border-right: 1px solid #1f2937;
+            padding: 25px 18px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+        }
+
+        .logo {
+            font-size: 23px;
+            font-weight: bold;
+            color: #38bdf8;
+            margin-bottom: 35px;
+            padding-left: 12px;
+        }
+
+        .logo span {
+            color: white;
+        }
+
+        .menu-title {
+            font-size: 11px;
+            color: #6b7280;
+            text-transform: uppercase;
+            margin: 20px 12px 10px;
+        }
+
+        .menu a {
+            display: block;
+            text-decoration: none;
+            color: #9ca3af;
+            padding: 13px 14px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            transition: .2s;
+        }
+
+        .menu a:hover,
+        .menu a.active {
+            background: #1e293b;
+            color: #38bdf8;
+        }
+
+        .main {
+            margin-left: 250px;
+            width: calc(100% - 250px);
+            padding: 28px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .topbar h1 {
+            font-size: 28px;
+            color: white;
+        }
+
+        .admin-user {
+            background: #111827;
+            border: 1px solid #1f2937;
+            padding: 10px 15px;
+            border-radius: 8px;
+            color: #cbd5e1;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 12px;
+            padding: 22px;
+        }
+
+        .stat-title {
+            color: #9ca3af;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .stat-value {
+            font-size: 27px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .stat-small {
+            margin-top: 8px;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 22px;
+        }
+
+        .card {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid #1f2937;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h2 {
+            font-size: 17px;
+            color: white;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            font-size: 12px;
+            color: #64748b;
+            padding: 12px 10px;
+            border-bottom: 1px solid #1f2937;
+        }
+
+        td {
+            padding: 13px 10px;
+            border-bottom: 1px solid #1f2937;
+            font-size: 13px;
+            color: #cbd5e1;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .pending {
+            background: #422006;
+            color: #fbbf24;
+        }
+
+        .approved {
+            background: #052e16;
+            color: #4ade80;
+        }
+
+        .rejected {
+            background: #450a0a;
+            color: #f87171;
+        }
+
+        .open {
+            background: #082f49;
+            color: #38bdf8;
+        }
+
+        .win {
+            background: #052e16;
+            color: #4ade80;
+        }
+
+        .loss {
+            background: #450a0a;
+            color: #f87171;
+        }
+
+        .buy {
+            color: #4ade80;
+            font-weight: bold;
+        }
+
+        .sell {
+            color: #f87171;
+            font-weight: bold;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 6px;
+            padding: 7px 11px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .approve-btn {
+            background: #166534;
+            color: white;
+        }
+
+        .approve-btn:hover {
+            background: #15803d;
+        }
+
+        .reject-btn {
+            background: #991b1b;
+            color: white;
+        }
+
+        .reject-btn:hover {
+            background: #b91c1c;
+        }
+
+        .empty {
+            text-align: center;
+            color: #64748b;
+            padding: 25px;
+        }
+
+        @media (max-width: 1100px) {
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 750px) {
+            .sidebar {
+                width: 70px;
+                padding: 20px 8px;
+            }
+
+            .logo {
+                font-size: 0;
+                text-align: center;
+            }
+
+            .logo:first-letter {
+                font-size: 22px;
+            }
+
+            .menu-title {
+                display: none;
+            }
+
+            .menu a {
+                font-size: 0;
+                text-align: center;
+            }
+
+            .menu a::first-letter {
+                font-size: 18px;
+            }
+
+            .main {
+                margin-left: 70px;
+                width: calc(100% - 70px);
+                padding: 18px;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar {
+                align-items: flex-start;
+                gap: 10px;
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="logo">
+            Trade<span>Admin</span>
+        </div>
+
+        <div class="menu-title">
+            Main
+        </div>
+
+        <div class="menu">
+
+            <a href="{% url 'admin_dashboard' %}" class="active">
+                🏠 Dashboard
+            </a>
+
+            <a href="{% url 'admin_users' %}">
+                👥 Users
+            </a>
+
+            <a href="{% url 'market_control' %}">
+                📈 Market Control
+            </a>
+
+            <a href="/admin/trading/tradingaccount/">
+                💰 Accounts
+            </a>
+
+            <a href="/admin/trading/trade/">
+                📊 Trades
+            </a>
+
+            <a href="/admin/trading/transaction/">
+                💳 Transactions
+            </a>
+
+        </div>
+
+        <div class="menu-title">
+            System
+        </div>
+
+        <div class="menu">
+
+            <a href="/admin/">
+                ⚙️ Django Admin
+            </a>
+
+            <a href="/">
+                🌐 Website
+            </a>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN -->
+    <main class="main">
+
+        <div class="topbar">
+
+            <div>
+                <h1>Dashboard</h1>
+
+                <p style="color:#64748b; margin-top:6px;">
+                    Trading platform overview
+                </p>
+            </div>
+
+            <div class="admin-user">
+                👤 {{ request.user.username }}
+            </div>
+
+        </div>
+
+
+        <!-- FIRST STATS -->
+        <section class="stats">
+
+            <div class="stat-card">
+
+                <div class="stat-title">
+                    Total Users
+                </div>
+
+                <div class="stat-value">
+                    {{ total_users }}
+                </div>
+
+                <div class="stat-small">
+                    Registered accounts
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-title">
+                    Total Balance
+                </div>
+
+                <div class="stat-value">
+                    ${{ total_balance|floatformat:2 }}
+                </div>
+
+                <div class="stat-small">
+                    All trading accounts
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-title">
+                    Total Trades
+                </div>
+
+                <div class="stat-value">
+                    {{ total_trades }}
+                </div>
+
+                <div class="stat-small">
+                    All binary trades
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-title">
+                    Open Trades
+                </div>
+
+                <div class="stat-value">
+                    {{ open_trades }}
+                </div>
+
+                <div class="stat-small">
+                    Currently running
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- SECOND STATS -->
+        <section class="stats">
+
+            <div class="stat-card">
+
+                <div class="stat-title">
+                    Finished Trades
+                </div>
+
+                <div class="stat-value">
+                    {{ finished_trades }}
+                </div>
+
+                <div class="stat-small">
+                    WIN + LOSS
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-title">
+                    Pending Transactions
+                </div>
+
+                <div class="stat-value">
+                    {{ pending_transactions }}
+                </div>
+
+                <div class="stat-small">
+                    Need admin review
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-title">
+                    Approved Transactions
+                </div>
+
+                <div class="stat-value">
+                    {{ approved_transactions }}
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-title">
+                    Rejected Transactions
+                </div>
+
+                <div class="stat-value">
+                    {{ rejected_transactions }}
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- CONTENT -->
+        <div class="grid">
+
+
+            <!-- PENDING TRANSACTIONS -->
+            <div class="card">
+
+                <div class="card-header">
+
+                    <h2>
+                        Pending Transactions
+                    </h2>
+
+                    <span class="badge pending">
+                        {{ pending_transactions }} Pending
+                    </span>
+
+                </div>
+
+                <div class="card-body">
+
+                    {% if pending_list %}
+
+                    <div class="table-wrapper">
+
+                        <table>
+
+                            <thead>
+
+                                <tr>
+                                    <th>User</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Action</th>
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                            {% for txn in pending_list %}
+
+                                <tr>
+
+                                    <td>
+                                        {{ txn.user.username }}
+                                    </td>
+
+                                    <td>
+                                        {{ txn.transaction_type }}
+                                    </td>
+
+                                    <td>
+                                        ${{ txn.amount }}
+                                    </td>
+
+                                    <td>
+
+                                        <form method="POST" style="display:inline-flex; gap:6px; align-items:center; flex-wrap:wrap;">
+
+                                            {% csrf_token %}
+
+                                            <input
+                                                type="hidden"
+                                                name="transaction_id"
+                                                value="{{ txn.id }}"
+                                            >
+
+                                            <input
+                                                type="text"
+                                                name="comment"
+                                                placeholder="Comment (optional)"
+                                                style="padding:8px; border-radius:6px; border:1px solid #334155; background:#0f172a; color:white; min-width:160px;"
+                                            >
+
+                                            <button
+                                                type="submit"
+                                                name="action"
+                                                value="approve"
+                                                class="btn approve-btn">
+                                                Approve
+                                            </button>
+
+                                            <button
+                                                type="submit"
+                                                name="action"
+                                                value="reject"
+                                                class="btn reject-btn">
+                                                Reject
+                                            </button>
+
+                                        </form>
+
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                    {% else %}
+
+                        <div class="empty">
+                            No pending transactions.
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <!-- RECENT USERS -->
+            <div class="card">
+
+                <div class="card-header">
+                    <h2>Recent Users</h2>
+                </div>
+
+                <div class="card-body">
+
+                    {% if recent_users %}
+
+                    <div class="table-wrapper">
+
+                        <table>
+
+                            <thead>
+
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Joined</th>
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                            {% for user in recent_users %}
+
+                                <tr>
+
+                                    <td>
+                                        {{ user.username }}
+                                    </td>
+
+                                    <td>
+                                        {{ user.email|default:"-" }}
+                                    </td>
+
+                                    <td>
+                                        {{ user.date_joined|date:"d M Y" }}
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                    {% else %}
+
+                        <div class="empty">
+                            No users found.
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <!-- RECENT TRANSACTIONS -->
+            <div class="card">
+
+                <div class="card-header">
+                    <h2>Recent Transactions</h2>
+                </div>
+
+                <div class="card-body">
+
+                    {% if recent_transactions %}
+
+                    <div class="table-wrapper">
+
+                        <table>
+
+                            <thead>
+
+                                <tr>
+                                    <th>User</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                            {% for txn in recent_transactions %}
+
+                                <tr>
+
+                                    <td>
+                                        {{ txn.user.username }}
+                                    </td>
+
+                                    <td>
+                                        {{ txn.transaction_type }}
+                                    </td>
+
+                                    <td>
+                                        ${{ txn.amount }}
+                                    </td>
+
+                                    <td>
+
+                                        {% if txn.status == "PENDING" %}
+
+                                            <span class="badge pending">
+                                                PENDING
+                                            </span>
+
+                                        {% elif txn.status == "APPROVED" %}
+
+                                            <span class="badge approved">
+                                                APPROVED
+                                            </span>
+
+                                        {% else %}
+
+                                            <span class="badge rejected">
+                                                REJECTED
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                    {% else %}
+
+                        <div class="empty">
+                            No transactions yet.
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <!-- RECENT TRADES -->
+            <div class="card">
+
+                <div class="card-header">
+                    <h2>Recent Trades</h2>
+                </div>
+
+                <div class="card-body">
+
+                    {% if recent_trades %}
+
+                    <div class="table-wrapper">
+
+                        <table>
+
+                            <thead>
+
+                                <tr>
+                                    <th>User</th>
+                                    <th>Asset</th>
+                                    <th>Side</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>P/L</th>
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                            {% for trade in recent_trades %}
+
+                                <tr>
+
+                                    <td>
+                                        {{ trade.user.username }}
+                                    </td>
+
+                                    <td>
+                                        {{ trade.asset }}
+                                    </td>
+
+                                    <td>
+
+                                        {% if trade.side == "BUY" %}
+
+                                            <span class="buy">
+                                                BUY / UP
+                                            </span>
+
+                                        {% else %}
+
+                                            <span class="sell">
+                                                SELL / DOWN
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+                                    <td>
+                                        ${{ trade.amount|floatformat:2 }}
+                                    </td>
+
+                                    <td>
+
+                                        {% if trade.status == "OPEN" %}
+
+                                            <span class="badge open">
+                                                OPEN
+                                            </span>
+
+                                        {% elif trade.status == "WIN" %}
+
+                                            <span class="badge win">
+                                                WIN
+                                            </span>
+
+                                        {% elif trade.status == "LOSS" %}
+
+                                            <span class="badge loss">
+                                                LOSS
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+                                    <td>
+
+                                        {% if trade.status == "WIN" %}
+
+                                            <span class="win">
+                                                +${{ trade.profit_loss|floatformat:2 }}
+                                            </span>
+
+                                        {% elif trade.status == "LOSS" %}
+
+                                            <span class="loss">
+                                                -${{ trade.amount|floatformat:2 }}
+                                            </span>
+
+                                        {% else %}
+
+                                            <span>
+                                                —
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                    {% else %}
+
+                        <div class="empty">
+                            No trades yet.
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+</body>
+</html>

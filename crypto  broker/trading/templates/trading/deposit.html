@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TradeX - Deposit</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100%;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #020617;
+            color: #e2e8f0;
+        }
+
+        body {
+            overflow-x: hidden;
+        }
+
+        button,
+        input {
+            font-family: inherit;
+        }
+
+        .topbar {
+            height: 64px;
+            width: 100%;
+            background: #0f172a;
+            border-bottom: 1px solid #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 22px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .top-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .menu-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #334155;
+            background: #111827;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 800;
+            color: #38bdf8;
+        }
+
+        .balance-box {
+            background: #111827;
+            border: 1px solid #334155;
+            padding: 9px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .balance-box span {
+            color: #94a3b8;
+            margin-right: 5px;
+        }
+
+        .side-menu {
+            position: fixed;
+            left: -260px;
+            top: 64px;
+            width: 260px;
+            height: calc(100vh - 64px);
+            background: #0f172a;
+            border-right: 1px solid #1e293b;
+            z-index: 90;
+            transition: 0.25s ease;
+            padding: 20px;
+        }
+
+        .side-menu.active {
+            left: 0;
+        }
+
+        .side-menu a {
+            display: block;
+            text-decoration: none;
+            color: #cbd5e1;
+            padding: 13px 14px;
+            border-radius: 8px;
+            margin-bottom: 7px;
+            font-size: 14px;
+        }
+
+        .side-menu a:hover {
+            background: #1e293b;
+            color: white;
+        }
+
+        .logout-link {
+            color: #f87171 !important;
+        }
+
+        .main {
+            width: 100%;
+            max-width: 1500px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .page-header {
+            margin-bottom: 18px;
+        }
+
+        .page-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .page-subtitle {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .card {
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 650px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 18px;
+        }
+
+        .field {
+            margin-bottom: 15px;
+        }
+
+        .field label {
+            display: block;
+            color: #94a3b8;
+            font-size: 12px;
+            margin-bottom: 7px;
+        }
+
+        .field input {
+            width: 100%;
+            background: #020617;
+            border: 1px solid #334155;
+            color: white;
+            padding: 13px;
+            border-radius: 8px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .field input:focus {
+            border-color: #38bdf8;
+        }
+
+        .info-box {
+            background: #020617;
+            border: 1px solid #1e293b;
+            padding: 13px;
+            border-radius: 8px;
+            color: #94a3b8;
+            font-size: 12px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            border: none;
+            background: #2563eb;
+            color: white;
+            padding: 13px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .submit-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-top: 12px;
+            width: 100%;
+            text-align: center;
+            text-decoration: none;
+            color: #cbd5e1;
+            background: #111827;
+            border: 1px solid #334155;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .back-btn:hover {
+            background: #1e293b;
+            color: white;
+        }
+
+        @media (max-width: 650px) {
+            .main {
+                padding: 12px;
+            }
+
+            .topbar {
+                padding: 0 12px;
+            }
+
+            .card {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- TOP BAR -->
+
+    <div class="topbar">
+
+        <div class="top-left">
+
+            <button class="menu-btn" id="menuBtn">
+                ☰
+            </button>
+
+            <div class="logo">
+                TradeX
+            </div>
+
+        </div>
+
+        <div class="balance-box">
+            <span>Balance:</span>
+            ${{ request.user.tradingaccount.balance|floatformat:2 }}
+        </div>
+
+    </div>
+
+
+    <!-- SIDE MENU -->
+
+    <div class="side-menu" id="sideMenu">
+
+        <a href="{% url 'dashboard' %}">
+            Dashboard
+        </a>
+
+        <a href="{% url 'trade_history' %}">
+            Trade History
+        </a>
+
+        <a href="{% url 'transaction_history' %}">
+            Transactions
+        </a>
+
+        <a href="{% url 'my_account' %}">
+            My Account
+        </a>
+
+        <a href="{% url 'logout' %}" class="logout-link">
+            Logout
+        </a>
+
+    </div>
+
+
+    <!-- MAIN -->
+
+    <main class="main">
+
+        <div class="page-header">
+
+            <div class="page-title">
+                Deposit Funds
+            </div>
+
+            <div class="page-subtitle">
+                Submit a deposit request for admin approval.
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-title">
+                Deposit Amount
+            </div>
+
+
+            <div class="info-box">
+                Your deposit request will remain
+                <strong>PENDING</strong> until it is approved
+                by the administrator.
+            </div>
+
+
+            <form method="POST">
+
+                {% csrf_token %}
+
+                <div class="field">
+
+                    <label>
+                        Amount
+                    </label>
+
+                    <input
+                        type="number"
+                        name="amount"
+                        step="0.01"
+                        min="1"
+                        placeholder="Enter deposit amount"
+                        required
+                    >
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="submit-btn"
+                >
+                    Submit Deposit
+                </button>
+
+            </form>
+
+
+            <a
+                href="{% url 'dashboard' %}"
+                class="back-btn"
+            >
+                Back to Dashboard
+            </a>
+
+        </div>
+
+    </main>
+
+
+    <script>
+
+        const menuBtn =
+            document.getElementById("menuBtn");
+
+        const sideMenu =
+            document.getElementById("sideMenu");
+
+        menuBtn.addEventListener(
+            "click",
+            function () {
+
+                sideMenu.classList.toggle("active");
+
+            }
+        );
+
+    </script>
+
+</body>
+</html>

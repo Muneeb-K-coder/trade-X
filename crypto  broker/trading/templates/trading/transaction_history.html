@@ -1,0 +1,288 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Transaction History</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #0b1120;
+            color: #e5e7eb;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            padding: 25px 18px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            gap: 15px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 27px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-top: 6px;
+            font-size: 14px;
+        }
+
+        .user {
+            background: #111827;
+            border: 1px solid #1f2937;
+            padding: 10px 14px;
+            border-radius: 8px;
+            color: #cbd5e1;
+        }
+
+        .card {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 18px;
+            border-bottom: 1px solid #1f2937;
+        }
+
+        .card-header h2 {
+            color: white;
+            font-size: 18px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        th {
+            text-align: left;
+            padding: 13px;
+            font-size: 12px;
+            color: #64748b;
+            border-bottom: 1px solid #1f2937;
+        }
+
+        td {
+            padding: 14px 13px;
+            font-size: 13px;
+            color: #cbd5e1;
+            border-bottom: 1px solid #1f2937;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .pending {
+            background: #422006;
+            color: #fbbf24;
+        }
+
+        .approved {
+            background: #052e16;
+            color: #4ade80;
+        }
+
+        .rejected {
+            background: #450a0a;
+            color: #f87171;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 45px 20px;
+            color: #64748b;
+        }
+
+        .back {
+            display: inline-block;
+            margin-top: 20px;
+            background: #1e293b;
+            color: #cbd5e1;
+            text-decoration: none;
+            padding: 11px 17px;
+            border-radius: 7px;
+            font-size: 13px;
+        }
+
+        .back:hover {
+            background: #334155;
+            color: white;
+        }
+
+        @media (max-width: 600px) {
+
+            .container {
+                padding: 18px 12px;
+            }
+
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            h1 {
+                font-size: 23px;
+            }
+
+            .user {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="topbar">
+
+        <div>
+            <h1>Transaction History</h1>
+
+            <p class="subtitle">
+                View your deposit and withdrawal transactions
+            </p>
+        </div>
+
+        <div class="user">
+            👤 {{ request.user.username }}
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <div class="card-header">
+            <h2>My Transactions</h2>
+        </div>
+
+
+        {% if transactions %}
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Comment</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                    {% for transaction in transactions %}
+
+                        <tr>
+
+                            <td>
+                                {{ transaction.transaction_type }}
+                            </td>
+
+                            <td>
+                                ${{ transaction.amount }}
+                            </td>
+
+                            <td>
+
+                                {% if transaction.status == "PENDING" %}
+
+                                    <span class="badge pending">
+                                        PENDING
+                                    </span>
+
+                                {% elif transaction.status == "APPROVED" %}
+
+                                    <span class="badge approved">
+                                        APPROVED
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge rejected">
+                                        REJECTED
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+                                {% if transaction.comment %}
+                                    {{ transaction.comment }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {{ transaction.created_at|date:"d M Y, h:i A" }}
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        {% else %}
+
+            <div class="empty">
+                No transactions found.
+            </div>
+
+        {% endif %}
+
+    </div>
+
+
+    <a href="{% url 'dashboard' %}" class="back">
+        ← Back to Dashboard
+    </a>
+
+</div>
+
+</body>
+</html>

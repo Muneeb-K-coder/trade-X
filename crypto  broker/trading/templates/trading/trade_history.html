@@ -1,0 +1,406 @@
+
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Trade History</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #0b1120;
+            color: #e5e7eb;
+        }
+
+        .main {
+            min-height: 100vh;
+            padding: 28px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .topbar h1 {
+            font-size: 28px;
+            color: white;
+        }
+
+        .topbar p {
+            color: #64748b;
+            margin-top: 6px;
+        }
+
+        .user {
+            background: #111827;
+            border: 1px solid #1f2937;
+            padding: 10px 15px;
+            border-radius: 8px;
+            color: #cbd5e1;
+        }
+
+        .card {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid #1f2937;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h2 {
+            font-size: 17px;
+            color: white;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        th {
+            text-align: left;
+            font-size: 12px;
+            color: #64748b;
+            padding: 12px 10px;
+            border-bottom: 1px solid #1f2937;
+        }
+
+        td {
+            padding: 13px 10px;
+            border-bottom: 1px solid #1f2937;
+            font-size: 13px;
+            color: #cbd5e1;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .open {
+            background: #082f49;
+            color: #38bdf8;
+        }
+
+        .win {
+            background: #052e16;
+            color: #4ade80;
+        }
+
+        .loss {
+            background: #450a0a;
+            color: #f87171;
+        }
+
+        .buy {
+            color: #4ade80;
+            font-weight: bold;
+        }
+
+        .sell {
+            color: #f87171;
+            font-weight: bold;
+        }
+
+        .profit {
+            color: #4ade80;
+            font-weight: bold;
+        }
+
+        .loss-text {
+            color: #f87171;
+            font-weight: bold;
+        }
+
+        .empty {
+            text-align: center;
+            color: #64748b;
+            padding: 40px;
+        }
+
+        .back {
+            display: inline-block;
+            margin-top: 20px;
+            background: #1e293b;
+            color: #cbd5e1;
+            text-decoration: none;
+            padding: 10px 16px;
+            border-radius: 7px;
+            font-size: 13px;
+        }
+
+        .back:hover {
+            background: #334155;
+            color: white;
+        }
+
+        @media (max-width: 750px) {
+
+            .main {
+                padding: 18px;
+            }
+
+            .topbar {
+                align-items: flex-start;
+                gap: 10px;
+                flex-direction: column;
+            }
+
+            .topbar h1 {
+                font-size: 24px;
+            }
+
+            .user {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<main class="main">
+
+    <div class="topbar">
+
+        <div>
+            <h1>Trade History</h1>
+
+            <p>
+                View your trading activity
+            </p>
+        </div>
+
+        <div class="user">
+            👤 {{ request.user.username }}
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <div class="card-header">
+
+            <h2>All Trades</h2>
+
+            <span class="badge open">
+                Trade History
+            </span>
+
+        </div>
+
+
+        <div class="card-body">
+
+            {% if trades %}
+
+                <div class="table-wrapper">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+                                <th>Asset</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Entry Price</th>
+                                <th>Status</th>
+                                <th>Profit / Loss</th>
+                                <th>Opened</th>
+                                <th>Closed</th>
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                        {% for trade in trades %}
+
+                            <tr>
+
+                                <td>
+                                    {{ trade.asset }}
+                                </td>
+
+
+                                <td>
+
+                                    {% if trade.side == "BUY" %}
+
+                                        <span class="buy">
+                                            BUY
+                                        </span>
+
+                                    {% elif trade.side == "SELL" %}
+
+                                        <span class="sell">
+                                            SELL
+                                        </span>
+
+                                    {% else %}
+
+                                        {{ trade.side }}
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <td>
+                                    ${{ trade.amount }}
+                                </td>
+
+
+                                <td>
+                                    ${{ trade.price }}
+                                </td>
+
+
+                                <td>
+
+                                    {% if trade.status == "OPEN" %}
+
+                                        <span class="badge open">
+                                            OPEN
+                                        </span>
+
+                                    {% elif trade.status == "WIN" %}
+
+                                        <span class="badge win">
+                                            WIN
+                                        </span>
+
+                                    {% elif trade.status == "LOSS" %}
+
+                                        <span class="badge loss">
+                                            LOSS
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="badge loss">
+                                            {{ trade.status }}
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <td>
+
+                                    {% if trade.status == "WIN" %}
+
+                                        <span class="profit">
+                                            +${{ trade.profit_loss }}
+                                        </span>
+
+                                    {% elif trade.status == "LOSS" %}
+
+                                        <span class="loss-text">
+                                            -${{ trade.amount }}
+                                        </span>
+
+                                    {% else %}
+
+                                        <span style="color:#64748b;">
+                                            --
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <td>
+                                    {{ trade.created_at|date:"d M Y, h:i A" }}
+                                </td>
+
+
+                                <td>
+
+                                    {% if trade.closed_at %}
+
+                                        {{ trade.closed_at|date:"d M Y, h:i A" }}
+
+                                    {% else %}
+
+                                        <span style="color:#64748b;">
+                                            --
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <div class="empty">
+                    No trades found.
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <a href="{% url 'dashboard' %}" class="back">
+        ← Back to Dashboard
+    </a>
+
+</main>
+
+</body>
+</html>
+

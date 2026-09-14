@@ -1,0 +1,3155 @@
+{% load static %}
+
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradeX Dashboard</title>
+
+    <script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100%;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #020617;
+            color: #e2e8f0;
+        }
+
+        body {
+            overflow-x: hidden;
+        }
+
+        button,
+        input,
+        select {
+            font-family: inherit;
+        }
+
+        .topbar {
+            height: 64px;
+            width: 100%;
+            background: #0f172a;
+            border-bottom: 1px solid #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 22px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .top-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .menu-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #334155;
+            background: #111827;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 800;
+            color: #38bdf8;
+        }
+
+        .balance-box {
+            background: #111827;
+            border: 1px solid #334155;
+            padding: 9px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .balance-box span {
+            color: #94a3b8;
+            margin-right: 5px;
+        }
+
+        .side-menu {
+            position: fixed;
+            left: -260px;
+            top: 64px;
+            width: 260px;
+            height: calc(100vh - 64px);
+            background: #0f172a;
+            border-right: 1px solid #1e293b;
+            z-index: 90;
+            transition: 0.25s ease;
+            padding: 20px;
+        }
+
+        .side-menu.active {
+            left: 0;
+        }
+
+        .side-menu a {
+            display: block;
+            text-decoration: none;
+            color: #cbd5e1;
+            padding: 13px 14px;
+            border-radius: 8px;
+            margin-bottom: 7px;
+            font-size: 14px;
+        }
+
+        .side-menu a:hover {
+            background: #1e293b;
+            color: white;
+        }
+
+        .logout-link {
+            color: #f87171 !important;
+        }
+
+        .main {
+            width: 100%;
+            max-width: 1500px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .market-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .asset-select {
+            background: #111827;
+            color: white;
+            border: 1px solid #334155;
+            padding: 11px 14px;
+            border-radius: 8px;
+            outline: none;
+            min-width: 170px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .asset-select option {
+            background: #111827;
+            color: white;
+        }
+
+        .price-box {
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            padding: 10px 15px;
+            border-radius: 8px;
+        }
+
+        .price-label {
+            color: #64748b;
+            font-size: 11px;
+            margin-bottom: 3px;
+        }
+
+        .current-price {
+            font-size: 21px;
+            font-weight: 700;
+            color: #38bdf8;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 330px;
+            gap: 18px;
+        }
+
+        .card {
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+
+        .chart-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .candle-timer {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .timeframe-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 12px 0;
+        }
+
+        .tf-btn {
+            background: #111827;
+            border: 1px solid #334155;
+            color: #94a3b8;
+            padding: 6px 13px;
+            border-radius: 7px;
+            font-size: 12.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .tf-btn:hover {
+            background: #1e293b;
+            color: #e2e8f0;
+        }
+
+        .tf-btn.active {
+            background: #38bdf8;
+            border-color: #38bdf8;
+            color: #04101f;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 430px;
+            overflow: hidden;
+            border-radius: 8px;
+            touch-action: none;
+            overscroll-behavior: contain;
+        }
+
+        #priceChart {
+            width: 100%;
+            height: 400px;
+            overflow: hidden;
+        }
+
+        .chart-help {
+            color: #64748b;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .trade-panel {
+            margin-top: 18px;
+        }
+
+        .trade-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .field label {
+            display: block;
+            color: #94a3b8;
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+
+        .field input,
+        .field select {
+            width: 100%;
+            background: #020617;
+            border: 1px solid #334155;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            outline: none;
+        }
+
+        .payout-box {
+            grid-column: 1 / -1;
+            background: #020617;
+            border: 1px solid #1e293b;
+            padding: 12px;
+            border-radius: 8px;
+            color: #94a3b8;
+        }
+
+        .payout-value {
+            color: #4ade80;
+            font-weight: 700;
+        }
+
+        .trade-buttons {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .trade-btn {
+            width: 100%;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 800;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .buy-btn {
+            background: #16a34a;
+        }
+
+        .buy-btn:hover {
+            background: #15803d;
+        }
+
+        .sell-btn {
+            background: #dc2626;
+        }
+
+        .sell-btn:hover {
+            background: #b91c1c;
+        }
+
+        .section {
+            margin-top: 18px;
+        }
+
+        .trade-row {
+            border: 1px solid #1e293b;
+            background: #020617;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+
+        .trade-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 7px;
+        }
+
+        .trade-side {
+            font-weight: 700;
+        }
+
+        .buy-text {
+            color: #4ade80;
+        }
+
+        .sell-text {
+            color: #f87171;
+        }
+
+        .trade-meta {
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        .status {
+            font-size: 11px;
+            padding: 4px 7px;
+            border-radius: 5px;
+            font-weight: 700;
+        }
+
+        .status-open {
+            background: #172554;
+            color: #60a5fa;
+        }
+
+        .status-win {
+            background: #052e16;
+            color: #4ade80;
+        }
+
+        .status-loss {
+            background: #450a0a;
+            color: #f87171;
+        }
+
+        .profit {
+            color: #4ade80;
+            font-weight: 700;
+        }
+
+        .loss {
+            color: #f87171;
+            font-weight: 700;
+        }
+
+        .zero {
+            color: #94a3b8;
+        }
+
+        .empty {
+            text-align: center;
+            color: #64748b;
+            padding: 25px 10px;
+            font-size: 13px;
+        }
+
+        .funds {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .fund-btn {
+            width: 100%;
+            border: 1px solid #334155;
+            background: #111827;
+            color: white;
+            padding: 11px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .fund-btn:hover {
+            background: #1e293b;
+        }
+
+        .recent-trades {
+            margin-top: 18px;
+        }
+
+        .recent-trades-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .view-all-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            color: #38bdf8;
+            font-size: 12.5px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            padding: 7px 13px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .view-all-btn:hover {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: #38bdf8;
+            transform: translateX(2px);
+        }
+
+        .recent-table-wrap {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .trade-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .trade-table th,
+        .trade-table td {
+            padding: 11px 8px;
+            border-bottom: 1px solid #1e293b;
+            text-align: left;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .trade-table th {
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .trade-table td {
+            color: #cbd5e1;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 500;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            width: 100%;
+            max-width: 420px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 22px;
+        }
+
+        .modal h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+        .modal p {
+            color: #94a3b8;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .modal-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .modal-btn {
+            padding: 11px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            cursor: pointer;
+            background: #111827;
+            color: white;
+        }
+
+        .confirm-btn {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .trades-panel {
+            width: 100%;
+            max-width: 420px;
+            max-height: 78vh;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 14px;
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .trades-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 20px;
+            border-bottom: 1px solid #1e293b;
+            background: linear-gradient(180deg, #111c33, #0f172a);
+        }
+
+        .trades-panel-header h3 {
+            margin: 0;
+            font-size: 16px;
+            color: #f1f5f9;
+        }
+
+        .trades-panel-close {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background: #111827;
+            color: #cbd5e1;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .trades-panel-close:hover {
+            background: #1e293b;
+            color: #fff;
+        }
+
+        .trades-panel-list {
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .trades-panel-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 6px;
+            transition: background 0.15s ease;
+            border: 1px solid transparent;
+        }
+
+        .trades-panel-item:hover {
+            background: #1e293b;
+            border-color: #334155;
+        }
+
+        .trades-panel-item.active-pair {
+            background: rgba(56, 189, 248, 0.1);
+            border-color: rgba(56, 189, 248, 0.4);
+        }
+
+        .trades-panel-item .pair-name {
+            font-weight: 700;
+            color: #f1f5f9;
+            font-size: 14.5px;
+        }
+
+        .trades-panel-item .pair-tag {
+            font-size: 11px;
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.12);
+            padding: 4px 9px;
+            border-radius: 20px;
+            font-weight: 700;
+        }
+
+        .mobile-bottom-nav {
+            display: none;
+        }
+
+        @media (max-width: 1000px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 650px) {
+            html,
+            body {
+                width: 100%;
+                max-width: 100%;
+                overflow-x: hidden;
+            }
+
+            .topbar {
+                height: 58px;
+                padding: 0 10px;
+            }
+
+            .top-left {
+                gap: 9px;
+            }
+
+            .menu-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 19px;
+            }
+
+            .logo {
+                font-size: 20px;
+            }
+
+            .balance-box {
+                padding: 8px 10px;
+                font-size: 12px;
+                white-space: nowrap;
+            }
+
+            .balance-box span {
+                margin-right: 2px;
+            }
+
+            .side-menu {
+                top: 58px;
+                height: calc(100vh - 58px);
+                width: 240px;
+                left: -240px;
+            }
+
+            .side-menu.active {
+                left: 0;
+            }
+
+            .main {
+                width: 100%;
+                max-width: 100%;
+                padding: 10px;
+                padding-bottom: 82px;
+                overflow-x: hidden;
+            }
+
+            .market-header {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+                margin-bottom: 10px;
+            }
+
+            .asset-select {
+                width: 100%;
+                min-width: 0;
+                height: 46px;
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+
+            .price-box {
+                width: 100%;
+                min-height: 58px;
+                padding: 9px 12px;
+            }
+
+            .current-price {
+                font-size: 19px;
+            }
+
+            .dashboard-grid {
+                width: 100%;
+                display: grid;
+                grid-template-columns: minmax(0, 1fr);
+                gap: 10px;
+            }
+
+            .card {
+                width: 100%;
+                max-width: 100%;
+                padding: 12px;
+                border-radius: 10px;
+            }
+
+            .card-title {
+                font-size: 15px;
+                margin-bottom: 11px;
+            }
+
+            .chart-container {
+                width: 100%;
+                height: 330px;
+                overflow: hidden;
+                border-radius: 7px;
+            }
+
+            #priceChart {
+                width: 100%;
+                height: 300px;
+                min-width: 0;
+                overflow: hidden;
+            }
+
+            .chart-help {
+                font-size: 10px;
+                line-height: 1.5;
+                margin-top: 7px;
+            }
+
+            .trade-panel {
+                margin-top: 10px;
+            }
+
+            .trade-form {
+                width: 100%;
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .field {
+                width: 100%;
+            }
+
+            .field input,
+            .field select {
+                width: 100%;
+                height: 46px;
+                font-size: 14px;
+                padding: 11px;
+            }
+
+            .payout-box {
+                width: 100%;
+                padding: 11px;
+                font-size: 13px;
+            }
+
+            .trade-buttons {
+                width: 100%;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+
+            .trade-btn {
+                min-height: 48px;
+                padding: 12px 8px;
+                font-size: 14px;
+            }
+
+            .trade-row {
+                width: 100%;
+                padding: 11px;
+                margin-bottom: 7px;
+            }
+
+            .trade-top {
+                gap: 8px;
+            }
+
+            .trade-meta {
+                font-size: 11px;
+                line-height: 1.7;
+                word-break: break-word;
+            }
+
+            .recent-trades {
+                margin-top: 10px;
+            }
+
+            .recent-table-wrap {
+                width: 100%;
+                overflow-x: auto;
+                overflow-y: hidden;
+                -webkit-overflow-scrolling: touch;
+                border-radius: 7px;
+            }
+
+            .trade-table {
+                width: 100%;
+                min-width: 560px;
+            }
+
+            .trade-table th,
+            .trade-table td {
+                padding: 10px 7px;
+                font-size: 11px;
+                white-space: nowrap;
+            }
+
+            .section {
+                margin-top: 10px;
+            }
+
+            .funds {
+                width: 100%;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+
+            .fund-btn {
+                min-height: 44px;
+                padding: 10px 6px;
+                font-size: 13px;
+            }
+
+            .modal-overlay {
+                padding: 12px;
+            }
+
+            .modal {
+                width: 100%;
+                max-width: 100%;
+                padding: 18px;
+                border-radius: 10px;
+            }
+
+            .modal h3 {
+                font-size: 18px;
+            }
+
+            .modal p {
+                font-size: 13px;
+            }
+
+            .modal-actions {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+
+            .modal-btn {
+                min-height: 44px;
+                padding: 10px 6px;
+                font-size: 13px;
+            }
+
+            .mobile-bottom-nav {
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                height: 64px;
+                background: #0f172a;
+                border-top: 1px solid #1e293b;
+                z-index: 400;
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                align-items: center;
+                padding: 3px 3px;
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+
+            .mobile-bottom-nav a {
+                height: 56px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 3px;
+                text-decoration: none;
+                color: #94a3b8;
+                font-size: 10px;
+                border-radius: 8px;
+            }
+
+            .mobile-bottom-nav a:hover {
+                background: #1e293b;
+                color: white;
+            }
+
+            .mobile-bottom-nav a.active {
+                color: #38bdf8;
+            }
+
+            .mobile-nav-icon {
+                font-size: 19px;
+                line-height: 1;
+            }
+
+            .mobile-nav-text {
+                font-size: 9px;
+                font-weight: 600;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .topbar {
+                padding: 0 7px;
+            }
+
+            .logo {
+                font-size: 18px;
+            }
+
+            .balance-box {
+                padding: 7px 8px;
+                font-size: 11px;
+            }
+
+            .main {
+                padding-left: 8px;
+                padding-right: 8px;
+            }
+
+            .trade-buttons {
+                gap: 6px;
+            }
+
+            .trade-btn {
+                font-size: 13px;
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <!-- TOP BAR -->
+
+    <div class="topbar">
+
+        <div class="top-left">
+
+            <button class="menu-btn" id="menuBtn">
+                ☰
+            </button>
+
+            <div class="logo">
+                TradeX
+            </div>
+
+        </div>
+
+        <div class="balance-box">
+
+            <span>Balance:</span>
+
+            ${{ account.balance|floatformat:2 }}
+
+        </div>
+
+    </div>
+
+
+
+    <!-- SIDE MENU -->
+
+    <div class="side-menu" id="sideMenu">
+
+        <a href="{% url 'dashboard' %}">
+            Dashboard
+        </a>
+
+        <a href="#" onclick="openTradesPanel(); return false;">
+            Trades
+        </a>
+
+        <a href="{% url 'transaction_history' %}">
+            Transactions
+        </a>
+
+        <a href="{% url 'my_account' %}">
+            My Account
+        </a>
+
+        <a href="{% url 'logout' %}" class="logout-link">
+            Logout
+        </a>
+
+    </div>
+
+
+
+    <!-- MAIN -->
+
+    <main class="main">
+
+        <!-- MARKET HEADER -->
+
+        <div class="market-header">
+
+            <!-- PAIR SELECTOR ABOVE CHART -->
+
+            <select id="assetSelect" class="asset-select">
+
+                <option value="BTC/PKR">
+                    BTC/PKR
+                </option>
+
+                <option value="ETH/PKR">
+                    ETH/PKR
+                </option>
+
+                <option value="USDT/PKR">
+                    USDT/PKR
+                </option>
+
+                <option value="XRP/PKR">
+                    XRP/PKR
+                </option>
+
+                <option value="BNB/PKR">
+                    BNB/PKR
+                </option>
+
+                <option value="BTC/USD">
+                    BTC/USD
+                </option>
+
+                <option value="ETH/USD">
+                    ETH/USD
+                </option>
+
+                <option value="USDT/USD">
+                    USDT/USD
+                </option>
+
+                <option value="BTC/INR">
+                    BTC/INR
+                </option>
+
+                <option value="ETH/INR">
+                    ETH/INR
+                </option>
+
+            </select>
+
+
+
+            <!-- CURRENT PRICE -->
+
+            <div class="price-box">
+
+                <div class="price-label">
+                    CURRENT PRICE
+                </div>
+
+                <div class="current-price" id="currentPrice">
+                    50000.00
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="dashboard-grid">
+
+            <!-- LEFT -->
+
+            <div>
+
+                <!-- CHART -->
+
+                <div class="card">
+
+                    <div class="card-title chart-title-row">
+                        <span>Market Chart</span>
+                        <span class="candle-timer" id="candleTimer">--:--</span>
+                    </div>
+
+                    <div class="timeframe-bar" id="timeframeBar">
+                        <button type="button" class="tf-btn active" data-seconds="60">1m</button>
+                        <button type="button" class="tf-btn" data-seconds="120">2m</button>
+                        <button type="button" class="tf-btn" data-seconds="180">3m</button>
+                        <button type="button" class="tf-btn" data-seconds="300">5m</button>
+                        <button type="button" class="tf-btn" data-seconds="86400">1D</button>
+                        <button type="button" class="tf-btn" data-seconds="604800">1W</button>
+                        <button type="button" class="tf-btn" data-seconds="1209600">2W</button>
+                    </div>
+
+                    <div class="chart-container">
+
+                        <div id="priceChart"></div>
+
+                    </div>
+
+                    <div class="chart-help">
+                        Drag chart to view previous candles • Mouse wheel zooms chart only
+                    </div>
+
+                </div>
+
+
+
+                <!-- TRADE PANEL -->
+
+                <div class="card trade-panel">
+
+                    <div class="card-title">
+                         Live Trade
+                    </div>
+
+                    <div class="trade-form">
+
+                        <div class="field">
+
+                            <label>
+                                Amount
+                            </label>
+
+                            <input
+                                type="number"
+                                id="tradeAmount"
+                                value="100"
+                                min="1"
+                                step="1"
+                            >
+
+                        </div>
+
+
+
+                        <div class="field">
+
+                            <label>
+                                Duration
+                            </label>
+
+                            <select id="tradeDuration">
+
+                                <option value="60">
+                                    60 Seconds
+                                </option>
+
+                                <option value="120">
+                                    120 Seconds
+                                </option>
+
+                                <option value="180">
+                                    180 Seconds
+                                </option>
+
+                                <option value="240">
+                                    240 Seconds
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+
+                        <div class="payout-box">
+
+                            Payout:
+
+                            <span
+                                class="payout-value"
+                                id="payoutDisplay"
+                            >
+                                30%
+                            </span>
+
+                        </div>
+
+
+
+                        <div class="trade-buttons">
+
+                            <form
+                                method="POST"
+                               action="/trading/buy/"
+                                id="buyForm"
+                            >
+
+                                {% csrf_token %}
+
+                                <input
+                                    type="hidden"
+                                    name="amount"
+                                    id="buyAmount"
+                                >
+
+                                <input
+                                    type="hidden"
+                                    name="duration_seconds"
+                                    id="buyDuration"
+                                >
+
+                                <input
+                                    type="hidden"
+                                    name="asset"
+                                    id="buyAsset"
+                                >
+
+                                <button
+                                    type="submit"
+                                    class="trade-btn buy-btn"
+                                >
+                                    BUY
+                                </button>
+
+                            </form>
+
+
+
+                            <form
+                                method="POST"
+                               action="/trading/sell/"
+                                id="sellForm"
+                            >
+
+                                {% csrf_token %}
+
+                                <input
+                                    type="hidden"
+                                    name="amount"
+                                    id="sellAmount"
+                                >
+
+                                <input
+                                    type="hidden"
+                                    name="duration_seconds"
+                                    id="sellDuration"
+                                >
+
+                                <input
+                                    type="hidden"
+                                    name="asset"
+                                    id="sellAsset"
+                                >
+
+                                <button
+                                    type="submit"
+                                    class="trade-btn sell-btn"
+                                >
+                                    SELL
+                                </button>
+
+                            </form>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- OPEN TRADES -->
+<div class="card section">
+
+    <div class="card-title">
+        Open Trades
+    </div>
+
+    {% if open_positions %}
+
+        {% for trade in open_positions %}
+
+            <div class="trade-row">
+
+                <div class="trade-top">
+
+                    <div class="trade-side">
+
+                        {% if trade.side == "BUY" %}
+
+                            <span class="buy-text">
+                                BUY
+                            </span>
+
+                        {% else %}
+
+                            <span class="sell-text">
+                                SELL
+                            </span>
+
+                        {% endif %}
+
+                    </div>
+
+                    <span class="status status-open">
+                        OPEN
+                    </span>
+
+                </div>
+
+
+                <div class="trade-meta">
+
+                    <strong>
+                        {{ trade.pair.symbol|default:trade.asset }}
+                    </strong>
+
+                    <br>
+
+                    Amount:
+                    ${{ trade.amount|floatformat:2 }}
+
+                    <br>
+
+                    Entry Price:
+                    {{ trade.price|floatformat:2 }}
+
+                    <br>
+
+                    Duration:
+                    {{ trade.duration_seconds }} sec
+
+                    <br>
+
+                    Payout:
+                    {{ trade.payout_percent }}%
+
+                    <br>
+
+                    Opened:
+                    {{ trade.created_at|date:"M d, H:i:s" }}
+
+                    <br>
+
+                    <span class="trade-countdown"
+                          data-trade-id="{{ trade.id }}"
+                          data-created-ts="{{ trade.created_at|date:'U' }}"
+                          data-duration="{{ trade.duration_seconds }}">
+                    </span>
+
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <div class="empty">
+            No open trades.
+        </div>
+
+    {% endif %}
+
+</div>
+
+
+                <!-- RECENT TRADES -->
+
+                <div class="card recent-trades">
+
+                    <div class="card-title recent-trades-title">
+                        <span>Recent Trades</span>
+                        <a href="{% url 'trade_history' %}" class="view-all-btn">
+                            View All
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
+                        </a>
+                    </div>
+
+                    {% if closed_trades %}
+
+                        <div class="recent-table-wrap">
+
+                            <table class="trade-table">
+
+                                <thead>
+
+                                    <tr>
+
+                                        <th>Pair</th>
+
+                                        <th>Side</th>
+
+                                        <th>Amount</th>
+
+                                        <th>Entry Price</th>
+
+                                        <th>Close Price</th>
+
+                                        <th>Status</th>
+
+                                        <th>P/L</th>
+
+                                        <th>Date</th>
+
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    {% for trade in closed_trades|slice:":3" %}
+
+                                        <tr>
+
+                                            <!-- PAIR -->
+
+                                            <td>
+                                                {{ trade.asset }}
+                                            </td>
+
+                                            <!-- SIDE -->
+
+                                            <td>
+
+                                                {% if trade.side == "BUY" %}
+
+                                                    <span class="buy-text">
+                                                        BUY
+                                                    </span>
+
+                                                {% else %}
+
+                                                    <span class="sell-text">
+                                                        SELL
+                                                    </span>
+
+                                                {% endif %}
+
+                                            </td>
+
+
+
+                                            <!-- AMOUNT -->
+
+                                            <td>
+                                                ${{ trade.amount|floatformat:2 }}
+                                            </td>
+
+
+
+                                            <!-- ENTRY PRICE -->
+
+                                            <td>
+
+                                                {% if trade.price %}
+
+                                                    {{ trade.price|floatformat:2 }}
+
+                                                {% else %}
+
+                                                    -
+
+                                                {% endif %}
+
+                                            </td>
+
+
+
+                                            <!-- CLOSE PRICE -->
+
+                                            <td>
+
+                                                {% if trade.closing_price %}
+
+                                                    {{ trade.closing_price|floatformat:2 }}
+
+                                                {% else %}
+
+                                                    -
+
+                                                {% endif %}
+
+                                            </td>
+
+
+
+                                            <!-- STATUS -->
+
+                                            <td>
+
+                                                {% if trade.status == "WIN" %}
+
+                                                    <span class="status status-win">
+                                                        WIN
+                                                    </span>
+
+                                                {% elif trade.status == "LOSS" %}
+
+                                                    <span class="status status-loss">
+                                                        LOSS
+                                                    </span>
+
+                                                {% else %}
+
+                                                    <span class="status status-open">
+                                                        OPEN
+                                                    </span>
+
+                                                {% endif %}
+
+                                            </td>
+
+
+
+                                            <!-- P/L -->
+
+                                            <td>
+
+                                                {% if trade.profit_loss > 0 %}
+
+                                                    <span class="profit">
+                                                        +${{ trade.profit_loss|floatformat:2 }}
+                                                    </span>
+
+                                                {% elif trade.profit_loss < 0 %}
+
+                                                    <span class="loss">
+                                                        -${{ trade.amount|floatformat:2 }}
+                                                    </span>
+
+                                                {% else %}
+
+                                                    <span class="zero">
+                                                        $0.00
+                                                    </span>
+
+                                                {% endif %}
+
+                                            </td>
+
+
+
+                                            <!-- DATE -->
+
+                                            <td>
+                                                {{ trade.created_at|date:"M d, H:i:s" }}
+                                            </td>
+
+                                        </tr>
+
+                                    {% endfor %}
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    {% else %}
+
+                        <div class="empty">
+                            No completed trades yet.
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+
+            <!-- RIGHT -->
+
+            <div>
+
+       
+
+
+                <!-- ACCOUNT STATS -->
+
+                <div class="card section">
+
+                    <div class="card-title">
+                        Trading Stats
+                    </div>
+
+
+
+                    <div class="trade-row">
+
+                        <div class="trade-meta">
+                            Total Trades
+                        </div>
+
+                        <strong>
+                            {{ total_trades }}
+                        </strong>
+
+                    </div>
+
+
+
+                    <div class="trade-row">
+
+                        <div class="trade-meta">
+                            Open Trades
+                        </div>
+
+                        <strong>
+                            {{ open_trades }}
+                        </strong>
+
+                    </div>
+
+
+
+                    <div class="trade-row">
+
+                        <div class="trade-meta">
+                            Winning Trades
+                        </div>
+
+                        <strong class="profit">
+                            {{ win_trades }}
+                        </strong>
+
+                    </div>
+
+
+
+                    <div class="trade-row">
+
+                        <div class="trade-meta">
+                            Losing Trades
+                        </div>
+
+                        <strong class="loss">
+                            {{ loss_trades }}
+                        </strong>
+
+                    </div>
+
+
+
+                    <div class="trade-row">
+
+                        <div class="trade-meta">
+                            Total P/L
+                        </div>
+
+                        {% if total_profit_loss > 0 %}
+
+                            <strong class="profit">
+                                +${{ total_profit_loss|floatformat:2 }}
+                            </strong>
+
+                        {% elif total_profit_loss < 0 %}
+
+                            <strong class="loss">
+                                -${{ total_profit_loss|floatformat:2 }}
+                            </strong>
+
+                        {% else %}
+
+                            <strong class="zero">
+                                $0.00
+                            </strong>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- FUNDS -->
+
+                <div class="card section">
+
+                    <div class="card-title">
+                        Funds
+                    </div>
+
+                    <div class="funds">
+
+                        <a
+                            href="{% url 'deposit' %}"
+                            style="text-decoration:none;"
+                        >
+
+                            <button class="fund-btn">
+                                Deposit
+                            </button>
+
+                        </a>
+
+
+
+                        <a
+                            href="{% url 'withdraw' %}"
+                            style="text-decoration:none;"
+                        >
+
+                            <button class="fund-btn">
+                                Withdraw
+                            </button>
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+
+    <!-- MOBILE BOTTOM NAVIGATION -->
+
+    <div class="mobile-bottom-nav">
+
+        <a
+            href="{% url 'dashboard' %}"
+            class="active"
+        >
+
+            <span class="mobile-nav-icon">
+                🏠
+            </span>
+
+            <span class="mobile-nav-text">
+                Dashboard
+            </span>
+
+        </a>
+
+
+
+        <a href="#" onclick="openTradesPanel(); return false;">
+
+            <span class="mobile-nav-icon">
+                📊
+            </span>
+
+            <span class="mobile-nav-text">
+                Trades
+            </span>
+
+        </a>
+
+
+
+        <a href="{% url 'transaction_history' %}">
+
+            <span class="mobile-nav-icon">
+                💳
+            </span>
+
+            <span class="mobile-nav-text">
+                Transactions
+            </span>
+
+        </a>
+
+
+
+        <a href="{% url 'my_account' %}">
+
+            <span class="mobile-nav-icon">
+                👤
+            </span>
+
+            <span class="mobile-nav-text">
+                Account
+            </span>
+
+        </a>
+
+    </div>
+
+
+
+    <!-- TRADES / PAIRS PANEL -->
+
+    <div class="modal-overlay" id="tradesPanelOverlay" onclick="if(event.target===this) closeTradesPanel();">
+
+        <div class="trades-panel">
+
+            <div class="trades-panel-header">
+                <h3>Trades — Select Pair</h3>
+                <button class="trades-panel-close" onclick="closeTradesPanel();">✕</button>
+            </div>
+
+            <div class="trades-panel-list" id="tradesPanelList"></div>
+
+        </div>
+
+    </div>
+
+
+    <!-- CONFIRMATION MODAL -->
+
+    <div
+        class="modal-overlay"
+        id="confirmModal"
+    >
+
+        <div class="modal">
+
+            <h3>
+                Confirm Trade
+            </h3>
+
+            <p id="confirmText">
+                Are you sure?
+            </p>
+
+            <div class="modal-actions">
+
+                <button
+                    class="modal-btn"
+                    id="cancelConfirm"
+                    type="button"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    class="modal-btn confirm-btn"
+                    id="confirmTrade"
+                    type="button"
+                >
+                    Confirm Trade
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <script>
+
+        /* =========================
+           SIDE MENU
+        ========================= */
+
+        const menuBtn =
+            document.getElementById("menuBtn");
+
+        const sideMenu =
+            document.getElementById("sideMenu");
+
+        menuBtn.addEventListener(
+            "click",
+            function () {
+
+                sideMenu.classList.toggle("active");
+
+            }
+        );
+
+
+        /* =========================
+           TRADES / PAIRS PANEL
+        ========================= */
+
+        function openTradesPanel() {
+
+            sideMenu.classList.remove("active");
+
+            const listEl = document.getElementById("tradesPanelList");
+            const selectEl = document.getElementById("assetSelect");
+            const activeValue = selectEl.value;
+
+            listEl.innerHTML = "";
+
+            Array.from(selectEl.options).forEach(function (opt) {
+
+                const item = document.createElement("div");
+                item.className = "trades-panel-item" + (opt.value === activeValue ? " active-pair" : "");
+
+                item.innerHTML =
+                    '<span class="pair-name">' + opt.value + '</span>' +
+                    (opt.value === activeValue ? '<span class="pair-tag">OPEN</span>' : '<span class="pair-tag">SELECT</span>');
+
+                item.addEventListener("click", function () {
+                    selectPairFromPanel(opt.value);
+                });
+
+                listEl.appendChild(item);
+
+            });
+
+            document.getElementById("tradesPanelOverlay").classList.add("active");
+
+        }
+
+        function closeTradesPanel() {
+
+            document.getElementById("tradesPanelOverlay").classList.remove("active");
+
+        }
+
+        function selectPairFromPanel(pairValue) {
+
+            const selectEl = document.getElementById("assetSelect");
+
+            selectEl.value = pairValue;
+
+            selectEl.dispatchEvent(new Event("change"));
+
+            closeTradesPanel();
+
+            const chartCard = document.getElementById("priceChart");
+
+            if (chartCard) {
+                chartCard.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+
+        }
+
+
+
+        /* =========================
+           ASSET / PAIR PRICES
+        ========================= */
+
+        const basePrices = {
+
+            "BTC/PKR": 14000000,
+
+            "ETH/PKR": 420000,
+
+            "USDT/PKR": 280,
+
+            "XRP/PKR": 85,
+
+            "BNB/PKR": 210000,
+
+            "BTC/USD": 50000,
+
+            "ETH/USD": 3000,
+
+            "USDT/USD": 1,
+
+            "BTC/INR": 4200000,
+
+            "ETH/INR": 250000
+
+        };
+
+
+
+        let currentAsset = "BTC/PKR";
+
+        let currentTimeframeSeconds = 60;
+
+        let currentPrice =
+            basePrices[currentAsset];
+
+        let marketDirections = {};
+
+
+
+        /* =========================
+           MARKET DIRECTIONS
+        ========================= */
+
+        async function fetchMarketDirections() {
+
+            try {
+
+                const response = await fetch(
+                    "{% url 'market_direction' %}?_=" + Date.now(),
+                    {
+                        cache: "no-store"
+                    }
+                );
+
+                if (response.ok) {
+
+                    marketDirections =
+                        await response.json();
+
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "Market direction error:",
+                    error
+                );
+
+            }
+
+        }
+
+
+
+        fetchMarketDirections();
+
+
+
+        setInterval(
+            fetchMarketDirections,
+            2000
+        );
+
+
+
+        /* =========================
+           CSRF HELPER
+        ========================= */
+
+        function getCookie(name) {
+
+            const value =
+                "; " + document.cookie;
+
+            const parts =
+                value.split("; " + name + "=");
+
+            if (parts.length === 2) {
+                return parts.pop().split(";").shift();
+            }
+
+            return null;
+        }
+
+        const csrftoken = getCookie("csrftoken");
+
+
+
+        /* =========================
+           LIVE COUNTDOWN FOR OPEN TRADES
+        ========================= */
+
+        function updateCountdowns() {
+
+            const rows = document.querySelectorAll(
+                ".trade-countdown"
+            );
+
+            rows.forEach(function (el) {
+
+                const createdMs =
+                    parseInt(el.dataset.createdTs, 10) * 1000;
+
+                const durationMs =
+                    parseInt(el.dataset.duration, 10) * 1000;
+
+                const expiry =
+                    createdMs + durationMs;
+
+                const remainingMs =
+                    expiry - Date.now();
+
+                if (remainingMs <= 0) {
+
+                    el.textContent =
+                        "Closing...";
+
+                } else {
+
+                    const remainingSec =
+                        Math.ceil(remainingMs / 1000);
+
+                    el.textContent =
+                        "Closes in: " + remainingSec + "s";
+
+                }
+
+            });
+
+        }
+
+        updateCountdowns();
+
+        setInterval(updateCountdowns, 1000);
+
+
+
+        /* =========================
+           AUTO SETTLE EXPIRED TRADES
+        ========================= */
+
+        async function settleExpiredTrades() {
+
+            const hasOpenTrades =
+                document.querySelectorAll(".trade-countdown").length > 0;
+
+            if (!hasOpenTrades) {
+                return;
+            }
+
+            try {
+
+                const response = await fetch(
+                    "{% url 'settle_expired_trades' %}",
+                    {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": csrftoken
+                        }
+                    }
+                );
+
+                if (response.ok) {
+
+                    const data = await response.json();
+
+                    if (data.settled && data.settled > 0) {
+
+                        window.location.reload();
+
+                    }
+
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "Settle expired trades error:",
+                    error
+                );
+
+            }
+
+        }
+
+        setInterval(settleExpiredTrades, 3000);
+
+
+
+        const assetSelect =
+            document.getElementById("assetSelect");
+
+        const currentPriceElement =
+            document.getElementById("currentPrice");
+
+
+
+        /* =========================
+           PRICE DISPLAY
+        ========================= */
+
+        function updatePriceDisplay() {
+
+            if (
+                currentAsset === "USDT/USD"
+            ) {
+
+                currentPriceElement.textContent =
+                    currentPrice.toFixed(4);
+
+            } else {
+
+                currentPriceElement.textContent =
+                    currentPrice.toFixed(2);
+
+            }
+
+        }
+
+
+
+        updatePriceDisplay();
+
+
+
+        /* =========================
+           PAYOUT
+        ========================= */
+
+        const payoutRates = {
+
+            "60": 30,
+
+            "120": 30,
+
+            "180": 60,
+
+            "240": 60
+
+        };
+
+
+
+        const durationSelect =
+            document.getElementById("tradeDuration");
+
+        const payoutDisplay =
+            document.getElementById("payoutDisplay");
+
+
+
+        function updatePayout() {
+
+            const duration =
+                durationSelect.value;
+
+            payoutDisplay.textContent =
+                payoutRates[duration] + "%";
+
+        }
+
+
+
+        durationSelect.addEventListener(
+            "change",
+            updatePayout
+        );
+
+
+
+        updatePayout();
+
+
+
+        /* =========================
+           LIGHTWEIGHT CHART
+        ========================= */
+
+        const chartContainer =
+            document.getElementById("priceChart");
+
+
+
+        const priceChart =
+            LightweightCharts.createChart(
+                chartContainer,
+                {
+
+                    width:
+                        chartContainer.clientWidth,
+
+                    height: 300,
+
+                    layout: {
+
+                        background: {
+                            color: "#0f172a"
+                        },
+
+                        textColor: "#94a3b8"
+
+                    },
+
+                    grid: {
+
+                        vertLines: {
+                            color: "#1e293b"
+                        },
+
+                        horzLines: {
+                            color: "#1e293b"
+                        }
+
+                    },
+
+                    rightPriceScale: {
+
+                        borderColor: "#334155"
+
+                    },
+
+                    timeScale: {
+
+                        borderColor: "#334155",
+
+                        timeVisible: true,
+
+                        secondsVisible: false
+
+                    },
+
+                    crosshair: {
+
+                        mode:
+                            LightweightCharts.CrosshairMode.Normal
+
+                    },
+
+                    handleScroll: {
+
+                        mouseWheel: true,
+
+                        pressedMouseMove: true,
+
+                        horzTouchDrag: true,
+
+                        vertTouchDrag: true
+
+                    },
+
+                    handleScale: {
+
+                        axisPressedMouseMove: true,
+
+                        mouseWheel: true,
+
+                        pinch: true
+
+                    }
+
+                }
+
+            );
+
+
+
+        const candleSeries =
+            priceChart.addCandlestickSeries({
+
+                upColor: "#22c55e",
+
+                downColor: "#ef4444",
+
+                borderUpColor: "#22c55e",
+
+                borderDownColor: "#ef4444",
+
+                wickUpColor: "#22c55e",
+
+                wickDownColor: "#ef4444"
+
+            });
+
+
+
+        /* =========================
+           CHART WHEEL CONTROL
+        ========================= */
+
+        chartContainer.addEventListener(
+            "wheel",
+            function (event) {
+
+                if (event.ctrlKey) {
+
+                    event.preventDefault();
+
+                    event.stopPropagation();
+
+                }
+
+            },
+            {
+                passive: false,
+                capture: true
+            }
+        );
+
+
+
+        /* =========================
+           CANDLE DATA
+        ========================= */
+
+        let candles = [];
+
+
+
+        function createInitialCandles() {
+
+            candles = [];
+
+            let price =
+                basePrices[currentAsset];
+
+            const now =
+                Math.floor(
+                    Date.now() / 1000
+                );
+
+
+
+            const alignedNow =
+                Math.floor(now / currentTimeframeSeconds) * currentTimeframeSeconds;
+
+            for (
+                let i = 100;
+                i >= 0;
+                i--
+            ) {
+
+                const time =
+                    alignedNow - (i * currentTimeframeSeconds);
+
+                let volatility;
+
+                const tfScale =
+                    Math.sqrt(currentTimeframeSeconds / 60);
+
+                if (
+                    currentAsset === "USDT/USD"
+                ) {
+
+                    volatility = 0.002 * tfScale;
+
+                } else {
+
+                    volatility =
+                        price * 0.003 * tfScale;
+
+                }
+
+
+
+                const open =
+                    price;
+
+
+
+                const close =
+                    price +
+                    (
+                        (Math.random() - 0.5)
+                        * volatility
+                    );
+
+
+
+                const high =
+                    Math.max(
+                        open,
+                        close
+                    ) +
+                    Math.random()
+                    * volatility;
+
+
+
+                const low =
+                    Math.min(
+                        open,
+                        close
+                    ) -
+                    Math.random()
+                    * volatility;
+
+
+
+                candles.push({
+
+                    time: time,
+
+                    open: open,
+
+                    high: high,
+
+                    low: low,
+
+                    close: close
+
+                });
+
+
+
+                price = close;
+
+            }
+
+
+
+            currentPrice =
+                candles[
+                    candles.length - 1
+                ].close;
+
+
+
+            candleSeries.setData(
+                candles
+            );
+
+
+
+            priceChart
+                .timeScale()
+                .fitContent();
+
+
+
+            updatePriceDisplay();
+
+        }
+
+
+
+        createInitialCandles();
+
+
+
+        /* =========================
+           LIVE DEMO CANDLE UPDATE
+        ========================= */
+
+        let lastCandleTime =
+            Math.floor(
+                Date.now() / 1000 / currentTimeframeSeconds
+            ) * currentTimeframeSeconds;
+
+
+
+        function updateCandle() {
+
+            const now =
+                Math.floor(
+                    Date.now() / 1000
+                );
+
+
+
+            const bucketTime =
+                Math.floor(
+                    now / currentTimeframeSeconds
+                ) * currentTimeframeSeconds;
+
+
+
+            const oldPrice =
+                currentPrice;
+
+
+
+            let volatility;
+
+            const tfScale =
+                Math.sqrt(currentTimeframeSeconds / 60);
+
+
+
+            if (
+                currentAsset === "USDT/USD"
+            ) {
+
+                volatility =
+                    0.001 * tfScale;
+
+            } else {
+
+                volatility =
+                    currentPrice * 0.0015 * tfScale;
+
+            }
+
+
+
+            const direction =
+                marketDirections[currentAsset]
+                || "AUTO";
+
+
+
+            let movement;
+
+
+
+            if (direction === "UP") {
+
+                movement =
+                    volatility *
+                    (
+                        0.25 +
+                        Math.random() * 0.75
+                    );
+
+            } else if (
+                direction === "DOWN"
+            ) {
+
+                movement =
+                    -volatility *
+                    (
+                        0.25 +
+                        Math.random() * 0.75
+                    );
+
+            } else {
+
+                movement =
+                    (
+                        Math.random() - 0.5
+                    ) * volatility;
+
+            }
+
+
+
+            currentPrice =
+                Math.max(
+                    0.0001,
+                    currentPrice + movement
+                );
+
+
+
+            if (
+                bucketTime !==
+                lastCandleTime
+            ) {
+
+                lastCandleTime =
+                    bucketTime;
+
+
+
+                const newCandle = {
+
+                    time: bucketTime,
+
+                    open: oldPrice,
+
+                    high:
+                        Math.max(
+                            oldPrice,
+                            currentPrice
+                        ),
+
+                    low:
+                        Math.min(
+                            oldPrice,
+                            currentPrice
+                        ),
+
+                    close: currentPrice
+
+                };
+
+
+
+                candles.push(
+                    newCandle
+                );
+
+
+
+                candleSeries.update(
+                    newCandle
+                );
+
+            } else {
+
+                const last =
+                    candles[
+                        candles.length - 1
+                    ];
+
+
+
+                if (last) {
+
+                    last.close =
+                        currentPrice;
+
+
+
+                    last.high =
+                        Math.max(
+                            last.high,
+                            currentPrice
+                        );
+
+
+
+                    last.low =
+                        Math.min(
+                            last.low,
+                            currentPrice
+                        );
+
+
+
+                    candleSeries.update(
+                        last
+                    );
+
+                }
+
+            }
+
+
+
+            updatePriceDisplay();
+
+        }
+
+
+
+        setInterval(
+            updateCandle,
+            2000
+        );
+
+
+        /* =========================
+           CANDLE COUNTDOWN TIMER
+        ========================= */
+
+        function updateCandleTimer() {
+
+            const timerEl =
+                document.getElementById("candleTimer");
+
+            if (!timerEl) {
+                return;
+            }
+
+            const now =
+                Math.floor(Date.now() / 1000);
+
+            const bucketTime =
+                Math.floor(now / currentTimeframeSeconds) * currentTimeframeSeconds;
+
+            const secondsLeft =
+                (bucketTime + currentTimeframeSeconds) - now;
+
+            const mins =
+                Math.floor(secondsLeft / 60);
+
+            const secs =
+                secondsLeft % 60;
+
+            timerEl.textContent =
+                String(mins).padStart(2, "0") + ":" + String(secs).padStart(2, "0");
+
+        }
+
+        updateCandleTimer();
+
+        setInterval(
+            updateCandleTimer,
+            1000
+        );
+
+
+        /* =========================
+           TIMEFRAME SWITCHER
+        ========================= */
+
+        const timeframeButtons =
+            document.querySelectorAll(".tf-btn");
+
+        timeframeButtons.forEach(function (btn) {
+
+            btn.addEventListener("click", function () {
+
+                timeframeButtons.forEach(function (b) {
+                    b.classList.remove("active");
+                });
+
+                btn.classList.add("active");
+
+                currentTimeframeSeconds =
+                    parseInt(btn.dataset.seconds, 10);
+
+                createInitialCandles();
+
+                lastCandleTime =
+                    Math.floor(Date.now() / 1000 / currentTimeframeSeconds) * currentTimeframeSeconds;
+
+                updateCandleTimer();
+
+            });
+
+        });
+
+
+        /* =========================
+           CHANGE PAIR
+        ========================= */
+
+        assetSelect.addEventListener(
+            "change",
+            function () {
+
+                currentAsset =
+                    assetSelect.value;
+
+
+
+                currentPrice =
+                    basePrices[currentAsset];
+
+
+
+                createInitialCandles();
+
+            }
+        );
+
+
+
+        /* =========================
+           WINDOW RESIZE
+        ========================= */
+
+        function resizeChart() {
+
+            const width =
+                chartContainer.clientWidth;
+
+
+
+            if (width > 0) {
+
+                priceChart.applyOptions({
+
+                    width: width
+
+                });
+
+            }
+
+        }
+
+
+
+        window.addEventListener(
+            "resize",
+            resizeChart
+        );
+
+
+
+        window.addEventListener(
+            "orientationchange",
+            function () {
+
+                setTimeout(
+                    resizeChart,
+                    300
+                );
+
+            }
+        );
+
+
+
+        setTimeout(
+            resizeChart,
+            100
+        );
+
+
+
+        /* =========================
+           TRADE FORMS
+        ========================= */
+
+        const buyForm =
+            document.getElementById("buyForm");
+
+        const sellForm =
+            document.getElementById("sellForm");
+
+
+
+        const buyAmount =
+            document.getElementById("buyAmount");
+
+        const buyDuration =
+            document.getElementById("buyDuration");
+
+        const buyAsset =
+            document.getElementById("buyAsset");
+
+
+
+        const sellAmount =
+            document.getElementById("sellAmount");
+
+        const sellDuration =
+            document.getElementById("sellDuration");
+
+        const sellAsset =
+            document.getElementById("sellAsset");
+
+
+
+        const tradeAmount =
+            document.getElementById("tradeAmount");
+
+
+
+        function prepareBuyForm() {
+
+            buyAmount.value =
+                tradeAmount.value;
+
+
+
+            buyDuration.value =
+                durationSelect.value;
+
+
+
+            buyAsset.value =
+                currentAsset;
+
+        }
+
+
+
+        function prepareSellForm() {
+
+            sellAmount.value =
+                tradeAmount.value;
+
+
+
+            sellDuration.value =
+                durationSelect.value;
+
+
+
+            sellAsset.value =
+                currentAsset;
+
+        }
+
+
+
+        /* =========================
+           CONFIRM MODAL
+        ========================= */
+
+        const confirmModal =
+            document.getElementById(
+                "confirmModal"
+            );
+
+
+
+        const confirmText =
+            document.getElementById(
+                "confirmText"
+            );
+
+
+
+        const cancelConfirm =
+            document.getElementById(
+                "cancelConfirm"
+            );
+
+
+
+        const confirmTrade =
+            document.getElementById(
+                "confirmTrade"
+            );
+
+
+
+        let pendingForm = null;
+
+
+
+        buyForm.addEventListener(
+            "submit",
+            function (event) {
+
+                event.preventDefault();
+
+
+
+                prepareBuyForm();
+
+
+
+                pendingForm =
+                    buyForm;
+
+
+
+                confirmText.innerHTML =
+                    "Confirm BUY trade of <strong>$"
+                    +
+                    tradeAmount.value
+                    +
+                    "</strong> on <strong>"
+                    +
+                    currentAsset
+                    +
+                    "</strong> for <strong>"
+                    +
+                    durationSelect.options[
+                        durationSelect.selectedIndex
+                    ].text
+                    +
+                    "</strong>?";
+
+
+
+                confirmModal.classList.add(
+                    "active"
+                );
+
+            }
+        );
+
+
+
+        sellForm.addEventListener(
+            "submit",
+            function (event) {
+
+                event.preventDefault();
+
+
+
+                prepareSellForm();
+
+
+
+                pendingForm =
+                    sellForm;
+
+
+
+                confirmText.innerHTML =
+                    "Confirm SELL trade of <strong>$"
+                    +
+                    tradeAmount.value
+                    +
+                    "</strong> on <strong>"
+                    +
+                    currentAsset
+                    +
+                    "</strong> for <strong>"
+                    +
+                    durationSelect.options[
+                        durationSelect.selectedIndex
+                    ].text
+                    +
+                    "</strong>?";
+
+
+
+                confirmModal.classList.add(
+                    "active"
+                );
+
+            }
+        );
+
+
+
+        cancelConfirm.addEventListener(
+            "click",
+            function () {
+
+                confirmModal.classList.remove(
+                    "active"
+                );
+
+
+
+                pendingForm = null;
+
+            }
+        );
+
+
+
+        confirmTrade.addEventListener(
+            "click",
+            function () {
+
+                if (pendingForm) {
+
+                    pendingForm.submit();
+
+                }
+
+            }
+        );
+
+
+
+        confirmModal.addEventListener(
+            "click",
+            function (event) {
+
+                if (
+                    event.target ===
+                    confirmModal
+                ) {
+
+                    confirmModal.classList.remove(
+                        "active"
+                    );
+
+
+
+                    pendingForm = null;
+
+                }
+
+            }
+        );
+
+    </script>
+
+</body>
+
+</html>
