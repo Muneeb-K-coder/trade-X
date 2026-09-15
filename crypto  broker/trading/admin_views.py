@@ -285,7 +285,7 @@ def admin_user_detail(request, user_id):
     account, created = TradingAccount.objects.get_or_create(
         user=user,
         defaults={
-            "balance": 10000.00,
+            "balance": 0.00,
             "credit_score": 100
         }
     )
@@ -479,7 +479,7 @@ def ban_trading(request, user_id):
     account, created = TradingAccount.objects.get_or_create(
         user=user,
         defaults={
-            "balance": 10000.00,
+            "balance": 0.00,
             "credit_score": 100,
             "trading_banned": False,
             "withdrawal_banned": False
@@ -574,7 +574,7 @@ def ban_withdrawal(request, user_id):
     account, created = TradingAccount.objects.get_or_create(
         user=user,
         defaults={
-            "balance": 10000.00,
+            "balance": 0.00,
             "credit_score": 100,
             "trading_banned": False,
             "withdrawal_banned": False

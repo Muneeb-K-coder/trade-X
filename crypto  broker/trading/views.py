@@ -107,7 +107,7 @@ def create_binary_trade(request, side):
     account, created = TradingAccount.objects.get_or_create(
         user=request.user,
         defaults={
-            "balance": Decimal("10000.00")
+            "balance": Decimal("0.00")
         }
     )
 
@@ -475,7 +475,7 @@ def settle_trade(request, trade_id):
             account, created = TradingAccount.objects.get_or_create(
                 user=request.user,
                 defaults={
-                    "balance": Decimal("10000.00")
+                    "balance": Decimal("0.00")
                 }
             )
 
@@ -737,7 +737,7 @@ def withdraw(request):
     account, created = TradingAccount.objects.get_or_create(
         user=request.user,
         defaults={
-            "balance": Decimal("10000.00")
+            "balance": Decimal("0.00")
         }
     )
 
@@ -1001,7 +1001,7 @@ def my_account(request):
     account, created = TradingAccount.objects.get_or_create(
         user=request.user,
         defaults={
-            "balance": Decimal("10000.00")
+            "balance": Decimal("0.00")
         }
     )
 

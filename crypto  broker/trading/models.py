@@ -44,7 +44,7 @@ class TradingAccount(models.Model):
     balance = models.DecimalField(
         max_digits=12,
         decimal_places=2,
-        default=10000.00
+        default= 0.00
     )
 
     credit_score = models.PositiveIntegerField(

@@ -35,7 +35,7 @@ def signup(request):
 
         TradingAccount.objects.create(
             user=user,
-            balance=10000.00
+            balance=0.00
         )
 
         messages.success(
@@ -95,7 +95,7 @@ def dashboard(request):
     account, created = TradingAccount.objects.get_or_create(
         user=request.user,
         defaults={
-            "balance": 10000.00
+            "balance": 0.00
         }
     )
 
