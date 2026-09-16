@@ -34,6 +34,7 @@ ASSETS = {
     "LTC/PKR": Decimal("30000"),
     "DOT/PKR": Decimal("1100"),
     "AVAX/PKR": Decimal("7500"),
+    "BTS/PKR": Decimal("1600"),
 }
 
 
@@ -1050,3 +1051,4 @@ def my_account(request):
             "total_profit_loss": total_profit_loss,
         }
     )
+
