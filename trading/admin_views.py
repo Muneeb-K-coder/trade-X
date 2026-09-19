@@ -650,6 +650,7 @@ def market_control(request):
         "USDT/PKR",
         "XRP/PKR",
         "BNB/PKR",
+        "BTS/PKR",
         "BTC/USD",
         "ETH/USD",
         "USDT/USD",
