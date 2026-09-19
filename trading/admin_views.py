@@ -1,3 +1,4 @@
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.models import User
@@ -55,6 +56,8 @@ def admin_dashboard(request):
                     user=txn.user,
                     defaults={
                         "balance": 0,
+                        "balance_pkr": 0,
+                        "balance_usd": 0,
                         "credit_score": 100
                     }
                 )
@@ -65,7 +68,11 @@ def admin_dashboard(request):
 
                 if txn.transaction_type == "DEPOSIT":
 
-                    account.balance += txn.amount
+                    if txn.currency == "PKR":
+                        account.balance_pkr += txn.amount
+                    else:
+                        account.balance_usd += txn.amount
+
                     account.save()
 
                     txn.status = "APPROVED"
@@ -74,7 +81,7 @@ def admin_dashboard(request):
 
                     messages.success(
                         request,
-                        f"Deposit approved for {txn.user.username}."
+                        f"Deposit of {txn.amount} {txn.currency} approved for {txn.user.username}."
                     )
 
                 # ------------------------------
@@ -83,16 +90,25 @@ def admin_dashboard(request):
 
                 elif txn.transaction_type == "WITHDRAW":
 
-                    if txn.amount > account.balance:
+                    if txn.currency == "PKR":
+                        current_balance = account.balance_pkr
+                    else:
+                        current_balance = account.balance_usd
+
+                    if txn.amount > current_balance:
 
                         messages.error(
                             request,
-                            f"Insufficient balance for {txn.user.username}."
+                            f"Insufficient {txn.currency} balance for {txn.user.username}."
                         )
 
                     else:
 
-                        account.balance -= txn.amount
+                        if txn.currency == "PKR":
+                            account.balance_pkr -= txn.amount
+                        else:
+                            account.balance_usd -= txn.amount
+
                         account.save()
 
                         txn.status = "APPROVED"
@@ -101,7 +117,7 @@ def admin_dashboard(request):
 
                         messages.success(
                             request,
-                            f"Withdrawal approved for {txn.user.username}."
+                            f"Withdrawal of {txn.amount} {txn.currency} approved for {txn.user.username}."
                         )
 
         # ==========================================
@@ -286,6 +302,8 @@ def admin_user_detail(request, user_id):
         user=user,
         defaults={
             "balance": 0.00,
+            "balance_pkr": 0.00,
+            "balance_usd": 0.00,
             "credit_score": 100
         }
     )
@@ -480,6 +498,8 @@ def ban_trading(request, user_id):
         user=user,
         defaults={
             "balance": 0.00,
+            "balance_pkr": 0.00,
+            "balance_usd": 0.00,
             "credit_score": 100,
             "trading_banned": False,
             "withdrawal_banned": False
@@ -575,6 +595,8 @@ def ban_withdrawal(request, user_id):
         user=user,
         defaults={
             "balance": 0.00,
+            "balance_pkr": 0.00,
+            "balance_usd": 0.00,
             "credit_score": 100,
             "trading_banned": False,
             "withdrawal_banned": False
@@ -707,3 +729,4 @@ def market_control(request):
             "controls": controls
         }
     )
+

@@ -50,6 +50,47 @@ PAYOUT_RATES = {
 }
 
 
+# ==========================================
+# CURRENCY HELPERS
+# ==========================================
+
+def get_selected_currency(request):
+    currency = request.POST.get(
+        "currency",
+        "USD"
+    ).upper()
+
+    if currency not in ["USD", "PKR"]:
+        currency = "USD"
+
+    return currency
+
+
+def get_balance(account, currency):
+    if currency == "PKR":
+        return account.balance_pkr
+
+    return account.balance_usd
+
+
+def set_balance(account, currency, amount):
+    if currency == "PKR":
+        account.balance_pkr = amount
+    else:
+        account.balance_usd = amount
+
+
+def get_currency_symbol(currency):
+    if currency == "PKR":
+        return "₨"
+
+    return "$"
+
+
+# ==========================================
+# PAYOUT
+# ==========================================
+
 def get_payout_rate(duration_seconds):
     return PAYOUT_RATES.get(
         duration_seconds,
@@ -108,9 +149,18 @@ def create_binary_trade(request, side):
     account, created = TradingAccount.objects.get_or_create(
         user=request.user,
         defaults={
-            "balance": Decimal("0.00")
+            "balance": Decimal("0.00"),
+            "balance_pkr": Decimal("0.00"),
+            "balance_usd": Decimal("0.00"),
         }
     )
+
+    # ==========================================
+    # CURRENCY
+    # ==========================================
+
+    currency = get_selected_currency(request)
+    currency_symbol = get_currency_symbol(currency)
 
     # ==========================================
     # GLOBAL TRADING CONTROL
@@ -203,11 +253,16 @@ def create_binary_trade(request, side):
 
         return redirect("dashboard")
 
-    if amount > account.balance:
+    current_balance = get_balance(
+        account,
+        currency
+    )
+
+    if amount > current_balance:
 
         messages.error(
             request,
-            "Insufficient demo balance."
+            f"Insufficient {currency} balance."
         )
 
         return redirect("dashboard")
@@ -260,6 +315,7 @@ def create_binary_trade(request, side):
         user=request.user,
         asset=asset,
         side=side,
+        currency=currency,
         amount=amount,
         price=entry_price,
         duration_seconds=duration_seconds,
@@ -272,7 +328,11 @@ def create_binary_trade(request, side):
     # DEDUCT STAKE
     # ==========================================
 
-    account.balance -= amount
+    set_balance(
+        account,
+        currency,
+        current_balance - amount
+    )
 
     account.save()
 
@@ -303,10 +363,11 @@ def create_binary_trade(request, side):
     messages.success(
         request,
         f"{asset} | {direction} | "
+        f"{currency} | "
         f"{duration_seconds}s | "
         f"{payout_percent}% payout | "
-        f"Potential Profit: ${potential_profit} | "
-        f"Potential Return: ${potential_return}"
+        f"Potential Profit: {currency_symbol}{potential_profit} | "
+        f"Potential Return: {currency_symbol}{potential_return}"
     )
 
     return redirect("dashboard")
@@ -476,8 +537,16 @@ def settle_trade(request, trade_id):
             account, created = TradingAccount.objects.get_or_create(
                 user=request.user,
                 defaults={
-                    "balance": Decimal("0.00")
+                    "balance": Decimal("0.00"),
+                    "balance_pkr": Decimal("0.00"),
+                    "balance_usd": Decimal("0.00"),
                 }
+            )
+
+            currency = trade.currency or "USD"
+
+            currency_symbol = get_currency_symbol(
+                currency
             )
 
             # ==========================================
@@ -496,16 +565,25 @@ def settle_trade(request, trade_id):
 
                 trade.profit_loss = profit
 
-                account.balance += (
-                    trade.amount
+                current_balance = get_balance(
+                    account,
+                    currency
+                )
+
+                set_balance(
+                    account,
+                    currency,
+                    current_balance
+                    + trade.amount
                     + profit
                 )
 
                 messages.success(
                     request,
                     f"{trade.asset} | "
-                    f"{trade.side} | WIN | "
-                    f"+${profit} profit | "
+                    f"{trade.side} | "
+                    f"{currency} | WIN | "
+                    f"+{currency_symbol}{profit} profit | "
                     f"Market: {market_direction} | "
                     f"Entry: {trade.price} | "
                     f"Expiry: {expiry_price}"
@@ -522,8 +600,9 @@ def settle_trade(request, trade_id):
                 messages.error(
                     request,
                     f"{trade.asset} | "
-                    f"{trade.side} | LOSS | "
-                    f"-${trade.amount} | "
+                    f"{trade.side} | "
+                    f"{currency} | LOSS | "
+                    f"-{currency_symbol}{trade.amount} | "
                     f"Market: {market_direction} | "
                     f"Entry: {trade.price} | "
                     f"Expiry: {expiry_price}"
@@ -685,6 +764,11 @@ def deposit(request):
 
     if request.method == "POST":
 
+        currency = get_selected_currency(request)
+        currency_symbol = get_currency_symbol(
+            currency
+        )
+
         try:
 
             amount = Decimal(
@@ -711,13 +795,15 @@ def deposit(request):
             user=request.user,
             transaction_type="DEPOSIT",
             amount=amount,
+            currency=currency,
             status="PENDING"
         )
 
         messages.success(
             request,
-            f"Deposit request of ${amount} "
-            f"submitted for admin approval."
+            f"Deposit request of "
+            f"{currency_symbol}{amount} "
+            f"{currency} submitted for admin approval."
         )
 
         return redirect("dashboard")
@@ -738,7 +824,9 @@ def withdraw(request):
     account, created = TradingAccount.objects.get_or_create(
         user=request.user,
         defaults={
-            "balance": Decimal("0.00")
+            "balance": Decimal("0.00"),
+            "balance_pkr": Decimal("0.00"),
+            "balance_usd": Decimal("0.00"),
         }
     )
 
@@ -749,6 +837,16 @@ def withdraw(request):
     if request.method == "POST":
 
         account.refresh_from_db()
+
+        currency = get_selected_currency(request)
+        currency_symbol = get_currency_symbol(
+            currency
+        )
+
+        current_balance = get_balance(
+            account,
+            currency
+        )
 
         # ==========================================
         # GLOBAL WITHDRAWAL CONTROL
@@ -823,11 +921,11 @@ def withdraw(request):
 
             return redirect("withdraw")
 
-        if amount > account.balance:
+        if amount > current_balance:
 
             messages.error(
                 request,
-                "Insufficient demo balance."
+                f"Insufficient {currency} balance."
             )
 
             return redirect("withdraw")
@@ -898,6 +996,7 @@ def withdraw(request):
             user=request.user,
             transaction_type="WITHDRAW",
             amount=amount,
+            currency=currency,
             status="PENDING",
             account_title=account_title,
             account_holder_name=account_holder_name,
@@ -906,8 +1005,9 @@ def withdraw(request):
 
         messages.success(
             request,
-            f"Withdrawal request of ${amount} "
-            f"submitted for admin approval."
+            f"Withdrawal request of "
+            f"{currency_symbol}{amount} "
+            f"{currency} submitted for admin approval."
         )
 
         return redirect("dashboard")
@@ -1002,7 +1102,9 @@ def my_account(request):
     account, created = TradingAccount.objects.get_or_create(
         user=request.user,
         defaults={
-            "balance": Decimal("0.00")
+            "balance": Decimal("0.00"),
+            "balance_pkr": Decimal("0.00"),
+            "balance_usd": Decimal("0.00"),
         }
     )
 
@@ -1051,4 +1153,3 @@ def my_account(request):
             "total_profit_loss": total_profit_loss,
         }
     )
-

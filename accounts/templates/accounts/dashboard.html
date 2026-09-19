@@ -77,14 +77,38 @@
         .balance-box {
             background: #111827;
             border: 1px solid #334155;
-            padding: 9px 15px;
+            padding: 7px 10px;
             border-radius: 8px;
             font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
         }
 
         .balance-box span {
             color: #94a3b8;
-            margin-right: 5px;
+            margin-right: 2px;
+        }
+
+        .balance-box strong {
+            color: white;
+        }
+
+        .currency-select {
+            background: #020617;
+            color: white;
+            border: 1px solid #334155;
+            padding: 5px 7px;
+            border-radius: 6px;
+            outline: none;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .currency-select option {
+            background: #111827;
+            color: white;
         }
 
         .side-menu {
@@ -679,13 +703,19 @@
             }
 
             .balance-box {
-                padding: 8px 10px;
+                padding: 6px 7px;
                 font-size: 12px;
                 white-space: nowrap;
+                gap: 4px;
             }
 
             .balance-box span {
-                margin-right: 2px;
+                margin-right: 0;
+            }
+
+            .currency-select {
+                padding: 4px 5px;
+                font-size: 10px;
             }
 
             .side-menu {
@@ -960,8 +990,14 @@
             }
 
             .balance-box {
-                padding: 7px 8px;
+                padding: 5px 6px;
                 font-size: 11px;
+                gap: 3px;
+            }
+
+            .currency-select {
+                font-size: 9px;
+                padding: 3px 4px;
             }
 
             .main {
@@ -1001,9 +1037,26 @@
 
         <div class="balance-box">
 
-            <span>Balance:</span>
+            <select
+                id="currencySelect"
+                class="currency-select"
+            >
+                <option value="USD">
+                    🇺🇸 USD
+                </option>
 
-            ${{ account.balance|floatformat:2 }}
+                <option value="PKR">
+                    🇵🇰 PKR
+                </option>
+            </select>
+
+            <span>
+                Balance:
+            </span>
+
+            <strong id="balanceDisplay">
+                $0.00
+            </strong>
 
         </div>
 
@@ -1066,6 +1119,7 @@
                 <option value="XRP/PKR">
                     XRP/PKR
                 </option>
+
                 <option value="BTS/PKR">
                     BTS/PKR
                 </option>
@@ -1132,13 +1186,63 @@
                     </div>
 
                     <div class="timeframe-bar" id="timeframeBar">
-                        <button type="button" class="tf-btn active" data-seconds="60">1m</button>
-                        <button type="button" class="tf-btn" data-seconds="120">2m</button>
-                        <button type="button" class="tf-btn" data-seconds="180">3m</button>
-                        <button type="button" class="tf-btn" data-seconds="300">5m</button>
-                        <button type="button" class="tf-btn" data-seconds="86400">1D</button>
-                        <button type="button" class="tf-btn" data-seconds="604800">1W</button>
-                        <button type="button" class="tf-btn" data-seconds="1209600">2W</button>
+
+                        <button
+                            type="button"
+                            class="tf-btn active"
+                            data-seconds="60"
+                        >
+                            1m
+                        </button>
+
+                        <button
+                            type="button"
+                            class="tf-btn"
+                            data-seconds="120"
+                        >
+                            2m
+                        </button>
+
+                        <button
+                            type="button"
+                            class="tf-btn"
+                            data-seconds="180"
+                        >
+                            3m
+                        </button>
+
+                        <button
+                            type="button"
+                            class="tf-btn"
+                            data-seconds="300"
+                        >
+                            5m
+                        </button>
+
+                        <button
+                            type="button"
+                            class="tf-btn"
+                            data-seconds="86400"
+                        >
+                            1D
+                        </button>
+
+                        <button
+                            type="button"
+                            class="tf-btn"
+                            data-seconds="604800"
+                        >
+                            1W
+                        </button>
+
+                        <button
+                            type="button"
+                            class="tf-btn"
+                            data-seconds="1209600"
+                        >
+                            2W
+                        </button>
+
                     </div>
 
                     <div class="chart-container">
@@ -1160,7 +1264,7 @@
                 <div class="card trade-panel">
 
                     <div class="card-title">
-                         Live Trade
+                        Live Trade
                     </div>
 
                     <div class="trade-form">
@@ -1232,7 +1336,7 @@
 
                             <form
                                 method="POST"
-                               action="/trading/buy/"
+                                action="/trading/buy/"
                                 id="buyForm"
                             >
 
@@ -1256,6 +1360,12 @@
                                     id="buyAsset"
                                 >
 
+                                <input
+                                    type="hidden"
+                                    name="currency"
+                                    id="buyCurrency"
+                                >
+
                                 <button
                                     type="submit"
                                     class="trade-btn buy-btn"
@@ -1269,7 +1379,7 @@
 
                             <form
                                 method="POST"
-                               action="/trading/sell/"
+                                action="/trading/sell/"
                                 id="sellForm"
                             >
 
@@ -1293,6 +1403,12 @@
                                     id="sellAsset"
                                 >
 
+                                <input
+                                    type="hidden"
+                                    name="currency"
+                                    id="sellCurrency"
+                                >
+
                                 <button
                                     type="submit"
                                     class="trade-btn sell-btn"
@@ -1308,100 +1424,113 @@
 
                 </div>
 
+
+
                 <!-- OPEN TRADES -->
-<div class="card section">
 
-    <div class="card-title">
-        Open Trades
-    </div>
+                <div class="card section">
 
-    {% if open_positions %}
-
-        {% for trade in open_positions %}
-
-            <div class="trade-row">
-
-                <div class="trade-top">
-
-                    <div class="trade-side">
-
-                        {% if trade.side == "BUY" %}
-
-                            <span class="buy-text">
-                                BUY
-                            </span>
-
-                        {% else %}
-
-                            <span class="sell-text">
-                                SELL
-                            </span>
-
-                        {% endif %}
-
+                    <div class="card-title">
+                        Open Trades
                     </div>
 
-                    <span class="status status-open">
-                        OPEN
-                    </span>
+                    {% if open_positions %}
+
+                        {% for trade in open_positions %}
+
+                            <div class="trade-row">
+
+                                <div class="trade-top">
+
+                                    <div class="trade-side">
+
+                                        {% if trade.side == "BUY" %}
+
+                                            <span class="buy-text">
+                                                BUY
+                                            </span>
+
+                                        {% else %}
+
+                                            <span class="sell-text">
+                                                SELL
+                                            </span>
+
+                                        {% endif %}
+
+                                    </div>
+
+                                    <span class="status status-open">
+                                        OPEN
+                                    </span>
+
+                                </div>
+
+
+                                <div class="trade-meta">
+
+                                    <strong>
+                                        {{ trade.pair.symbol|default:trade.asset }}
+                                    </strong>
+
+                                    <br>
+
+                                    Amount:
+
+                                    {% if trade.currency == "PKR" %}
+                                        ₨
+                                    {% else %}
+                                        $
+                                    {% endif %}
+
+                                    {{ trade.amount|floatformat:2 }}
+
+                                    <br>
+
+                                    Entry Price:
+                                    {{ trade.price|floatformat:2 }}
+
+                                    <br>
+
+                                    Duration:
+                                    {{ trade.duration_seconds }} sec
+
+                                    <br>
+
+                                    Payout:
+                                    {{ trade.payout_percent }}%
+
+                                    <br>
+
+                                    Opened:
+                                    {{ trade.created_at|date:"M d, H:i:s" }}
+
+                                    <br>
+
+                                    <span
+                                        class="trade-countdown"
+                                        data-trade-id="{{ trade.id }}"
+                                        data-created-ts="{{ trade.created_at|date:'U' }}"
+                                        data-duration="{{ trade.duration_seconds }}"
+                                    >
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        {% endfor %}
+
+                    {% else %}
+
+                        <div class="empty">
+                            No open trades.
+                        </div>
+
+                    {% endif %}
 
                 </div>
 
-
-                <div class="trade-meta">
-
-                    <strong>
-                        {{ trade.pair.symbol|default:trade.asset }}
-                    </strong>
-
-                    <br>
-
-                    Amount:
-                    ${{ trade.amount|floatformat:2 }}
-
-                    <br>
-
-                    Entry Price:
-                    {{ trade.price|floatformat:2 }}
-
-                    <br>
-
-                    Duration:
-                    {{ trade.duration_seconds }} sec
-
-                    <br>
-
-                    Payout:
-                    {{ trade.payout_percent }}%
-
-                    <br>
-
-                    Opened:
-                    {{ trade.created_at|date:"M d, H:i:s" }}
-
-                    <br>
-
-                    <span class="trade-countdown"
-                          data-trade-id="{{ trade.id }}"
-                          data-created-ts="{{ trade.created_at|date:'U' }}"
-                          data-duration="{{ trade.duration_seconds }}">
-                    </span>
-
-                </div>
-
-            </div>
-
-        {% endfor %}
-
-    {% else %}
-
-        <div class="empty">
-            No open trades.
-        </div>
-
-    {% endif %}
-
-</div>
 
 
                 <!-- RECENT TRADES -->
@@ -1409,11 +1538,33 @@
                 <div class="card recent-trades">
 
                     <div class="card-title recent-trades-title">
-                        <span>Recent Trades</span>
-                        <a href="{% url 'trade_history' %}" class="view-all-btn">
+
+                        <span>
+                            Recent Trades
+                        </span>
+
+                        <a
+                            href="{% url 'trade_history' %}"
+                            class="view-all-btn"
+                        >
                             View All
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
+
+                            <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path d="M5 12h14"></path>
+                                <path d="M13 6l6 6-6 6"></path>
+                            </svg>
+
                         </a>
+
                     </div>
 
                     {% if closed_trades %}
@@ -1426,21 +1577,37 @@
 
                                     <tr>
 
-                                        <th>Pair</th>
+                                        <th>
+                                            Pair
+                                        </th>
 
-                                        <th>Side</th>
+                                        <th>
+                                            Side
+                                        </th>
 
-                                        <th>Amount</th>
+                                        <th>
+                                            Amount
+                                        </th>
 
-                                        <th>Entry Price</th>
+                                        <th>
+                                            Entry Price
+                                        </th>
 
-                                        <th>Close Price</th>
+                                        <th>
+                                            Close Price
+                                        </th>
 
-                                        <th>Status</th>
+                                        <th>
+                                            Status
+                                        </th>
 
-                                        <th>P/L</th>
+                                        <th>
+                                            P/L
+                                        </th>
 
-                                        <th>Date</th>
+                                        <th>
+                                            Date
+                                        </th>
 
                                     </tr>
 
@@ -1457,6 +1624,8 @@
                                             <td>
                                                 {{ trade.asset }}
                                             </td>
+
+
 
                                             <!-- SIDE -->
 
@@ -1483,7 +1652,15 @@
                                             <!-- AMOUNT -->
 
                                             <td>
-                                                ${{ trade.amount|floatformat:2 }}
+
+                                                {% if trade.currency == "PKR" %}
+                                                    ₨
+                                                {% else %}
+                                                    $
+                                                {% endif %}
+
+                                                {{ trade.amount|floatformat:2 }}
+
                                             </td>
 
 
@@ -1559,19 +1736,45 @@
                                                 {% if trade.profit_loss > 0 %}
 
                                                     <span class="profit">
-                                                        +${{ trade.profit_loss|floatformat:2 }}
+
+                                                        +
+
+                                                        {% if trade.currency == "PKR" %}
+                                                            ₨
+                                                        {% else %}
+                                                            $
+                                                        {% endif %}
+
+                                                        {{ trade.profit_loss|floatformat:2 }}
+
                                                     </span>
 
                                                 {% elif trade.profit_loss < 0 %}
 
                                                     <span class="loss">
-                                                        -${{ trade.amount|floatformat:2 }}
+
+                                                        -
+
+                                                        {% if trade.currency == "PKR" %}
+                                                            ₨
+                                                        {% else %}
+                                                            $
+                                                        {% endif %}
+
+                                                        {{ trade.amount|floatformat:2 }}
+
                                                     </span>
 
                                                 {% else %}
 
                                                     <span class="zero">
-                                                        $0.00
+
+                                                        {% if trade.currency == "PKR" %}
+                                                            ₨0.00
+                                                        {% else %}
+                                                            $0.00
+                                                        {% endif %}
+
                                                     </span>
 
                                                 {% endif %}
@@ -1614,7 +1817,6 @@
 
             <div>
 
-       
 
 
                 <!-- ACCOUNT STATS -->
@@ -1782,7 +1984,10 @@
 
 
 
-        <a href="#" onclick="openTradesPanel(); return false;">
+        <a
+            href="#"
+            onclick="openTradesPanel(); return false;"
+        >
 
             <span class="mobile-nav-icon">
                 📊
@@ -1828,20 +2033,38 @@
 
     <!-- TRADES / PAIRS PANEL -->
 
-    <div class="modal-overlay" id="tradesPanelOverlay" onclick="if(event.target===this) closeTradesPanel();">
+    <div
+        class="modal-overlay"
+        id="tradesPanelOverlay"
+        onclick="if(event.target===this) closeTradesPanel();"
+    >
 
         <div class="trades-panel">
 
             <div class="trades-panel-header">
-                <h3>Trades — Select Pair</h3>
-                <button class="trades-panel-close" onclick="closeTradesPanel();">✕</button>
+
+                <h3>
+                    Trades — Select Pair
+                </h3>
+
+                <button
+                    class="trades-panel-close"
+                    onclick="closeTradesPanel();"
+                >
+                    ✕
+                </button>
+
             </div>
 
-            <div class="trades-panel-list" id="tradesPanelList"></div>
+            <div
+                class="trades-panel-list"
+                id="tradesPanelList"
+            ></div>
 
         </div>
 
     </div>
+
 
 
     <!-- CONFIRMATION MODAL -->
@@ -1890,6 +2113,67 @@
     <script>
 
         /* =========================
+           CURRENCY SYSTEM
+        ========================= */
+
+        const currencySelect =
+            document.getElementById("currencySelect");
+
+        const balanceDisplay =
+            document.getElementById("balanceDisplay");
+
+
+        const balances = {
+
+            USD:
+                parseFloat(
+                    "{{ account.balance_usd|default:'0' }}"
+                ) || 0,
+
+            PKR:
+                parseFloat(
+                    "{{ account.balance_pkr|default:'0' }}"
+                ) || 0
+
+        };
+
+
+       let selectedCurrency = localStorage.getItem("tradex_currency") || "USD";
+currencySelect.value = selectedCurrency;
+
+
+        function getCurrencySymbol() {
+
+            if (selectedCurrency === "PKR") {
+
+                return "₨";
+
+            }
+
+            return "$";
+
+        }
+
+
+        function updateBalanceDisplay() {
+
+            const balance =
+                balances[selectedCurrency] || 0;
+
+            balanceDisplay.textContent =
+                getCurrencySymbol() +
+                balance.toFixed(2);
+
+        }
+
+
+     currencySelect.addEventListener("change", function () {
+    selectedCurrency = currencySelect.value;
+    localStorage.setItem("tradex_currency", selectedCurrency);
+    updateBalanceDisplay();
+});
+
+        /* =========================
            SIDE MENU
         ========================= */
 
@@ -1909,6 +2193,7 @@
         );
 
 
+
         /* =========================
            TRADES / PAIRS PANEL
         ========================= */
@@ -1917,53 +2202,97 @@
 
             sideMenu.classList.remove("active");
 
-            const listEl = document.getElementById("tradesPanelList");
-            const selectEl = document.getElementById("assetSelect");
-            const activeValue = selectEl.value;
+            const listEl =
+                document.getElementById("tradesPanelList");
+
+            const selectEl =
+                document.getElementById("assetSelect");
+
+            const activeValue =
+                selectEl.value;
 
             listEl.innerHTML = "";
 
-            Array.from(selectEl.options).forEach(function (opt) {
+            Array.from(selectEl.options).forEach(
+                function (opt) {
 
-                const item = document.createElement("div");
-                item.className = "trades-panel-item" + (opt.value === activeValue ? " active-pair" : "");
+                    const item =
+                        document.createElement("div");
 
-                item.innerHTML =
-                    '<span class="pair-name">' + opt.value + '</span>' +
-                    (opt.value === activeValue ? '<span class="pair-tag">OPEN</span>' : '<span class="pair-tag">SELECT</span>');
+                    item.className =
+                        "trades-panel-item" +
+                        (
+                            opt.value === activeValue
+                                ? " active-pair"
+                                : ""
+                        );
 
-                item.addEventListener("click", function () {
-                    selectPairFromPanel(opt.value);
-                });
+                    item.innerHTML =
+                        '<span class="pair-name">' +
+                        opt.value +
+                        '</span>' +
+                        (
+                            opt.value === activeValue
+                                ? '<span class="pair-tag">OPEN</span>'
+                                : '<span class="pair-tag">SELECT</span>'
+                        );
 
-                listEl.appendChild(item);
+                    item.addEventListener(
+                        "click",
+                        function () {
 
-            });
+                            selectPairFromPanel(
+                                opt.value
+                            );
 
-            document.getElementById("tradesPanelOverlay").classList.add("active");
+                        }
+                    );
+
+                    listEl.appendChild(item);
+
+                }
+            );
+
+            document
+                .getElementById("tradesPanelOverlay")
+                .classList.add("active");
 
         }
+
 
         function closeTradesPanel() {
 
-            document.getElementById("tradesPanelOverlay").classList.remove("active");
+            document
+                .getElementById("tradesPanelOverlay")
+                .classList.remove("active");
 
         }
 
+
         function selectPairFromPanel(pairValue) {
 
-            const selectEl = document.getElementById("assetSelect");
+            const selectEl =
+                document.getElementById("assetSelect");
 
-            selectEl.value = pairValue;
+            selectEl.value =
+                pairValue;
 
-            selectEl.dispatchEvent(new Event("change"));
+            selectEl.dispatchEvent(
+                new Event("change")
+            );
 
             closeTradesPanel();
 
-            const chartCard = document.getElementById("priceChart");
+            const chartCard =
+                document.getElementById("priceChart");
 
             if (chartCard) {
-                chartCard.scrollIntoView({ behavior: "smooth", block: "center" });
+
+                chartCard.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
+                });
+
             }
 
         }
@@ -2001,10 +2330,11 @@
         };
 
 
+        let currentAsset =
+            "BTC/PKR";
 
-        let currentAsset = "BTC/PKR";
-
-        let currentTimeframeSeconds = 60;
+        let currentTimeframeSeconds =
+            60;
 
         let currentPrice =
             basePrices[currentAsset];
@@ -2021,12 +2351,14 @@
 
             try {
 
-                const response = await fetch(
-                    "{% url 'market_direction' %}?_=" + Date.now(),
-                    {
-                        cache: "no-store"
-                    }
-                );
+                const response =
+                    await fetch(
+                        "{% url 'market_direction' %}?_=" +
+                        Date.now(),
+                        {
+                            cache: "no-store"
+                        }
+                    );
 
                 if (response.ok) {
 
@@ -2047,9 +2379,7 @@
         }
 
 
-
         fetchMarketDirections();
-
 
 
         setInterval(
@@ -2069,16 +2399,26 @@
                 "; " + document.cookie;
 
             const parts =
-                value.split("; " + name + "=");
+                value.split(
+                    "; " + name + "="
+                );
 
             if (parts.length === 2) {
-                return parts.pop().split(";").shift();
+
+                return parts
+                    .pop()
+                    .split(";")
+                    .shift();
+
             }
 
             return null;
+
         }
 
-        const csrftoken = getCookie("csrftoken");
+
+        const csrftoken =
+            getCookie("csrftoken");
 
 
 
@@ -2088,46 +2428,66 @@
 
         function updateCountdowns() {
 
-            const rows = document.querySelectorAll(
-                ".trade-countdown"
-            );
+            const rows =
+                document.querySelectorAll(
+                    ".trade-countdown"
+                );
 
-            rows.forEach(function (el) {
+            rows.forEach(
+                function (el) {
 
-                const createdMs =
-                    parseInt(el.dataset.createdTs, 10) * 1000;
+                    const createdMs =
+                        parseInt(
+                            el.dataset.createdTs,
+                            10
+                        ) * 1000;
 
-                const durationMs =
-                    parseInt(el.dataset.duration, 10) * 1000;
+                    const durationMs =
+                        parseInt(
+                            el.dataset.duration,
+                            10
+                        ) * 1000;
 
-                const expiry =
-                    createdMs + durationMs;
+                    const expiry =
+                        createdMs +
+                        durationMs;
 
-                const remainingMs =
-                    expiry - Date.now();
+                    const remainingMs =
+                        expiry -
+                        Date.now();
 
-                if (remainingMs <= 0) {
+                    if (remainingMs <= 0) {
 
-                    el.textContent =
-                        "Closing...";
+                        el.textContent =
+                            "Closing...";
 
-                } else {
+                    } else {
 
-                    const remainingSec =
-                        Math.ceil(remainingMs / 1000);
+                        const remainingSec =
+                            Math.ceil(
+                                remainingMs / 1000
+                            );
 
-                    el.textContent =
-                        "Closes in: " + remainingSec + "s";
+                        el.textContent =
+                            "Closes in: " +
+                            remainingSec +
+                            "s";
+
+                    }
 
                 }
-
-            });
+            );
 
         }
 
+
         updateCountdowns();
 
-        setInterval(updateCountdowns, 1000);
+
+        setInterval(
+            updateCountdowns,
+            1000
+        );
 
 
 
@@ -2138,29 +2498,38 @@
         async function settleExpiredTrades() {
 
             const hasOpenTrades =
-                document.querySelectorAll(".trade-countdown").length > 0;
+                document.querySelectorAll(
+                    ".trade-countdown"
+                ).length > 0;
 
             if (!hasOpenTrades) {
+
                 return;
+
             }
 
             try {
 
-                const response = await fetch(
-                    "{% url 'settle_expired_trades' %}",
-                    {
-                        method: "POST",
-                        headers: {
-                            "X-CSRFToken": csrftoken
+                const response =
+                    await fetch(
+                        "{% url 'settle_expired_trades' %}",
+                        {
+                            method: "POST",
+                            headers: {
+                                "X-CSRFToken": csrftoken
+                            }
                         }
-                    }
-                );
+                    );
 
                 if (response.ok) {
 
-                    const data = await response.json();
+                    const data =
+                        await response.json();
 
-                    if (data.settled && data.settled > 0) {
+                    if (
+                        data.settled &&
+                        data.settled > 0
+                    ) {
 
                         window.location.reload();
 
@@ -2179,7 +2548,11 @@
 
         }
 
-        setInterval(settleExpiredTrades, 3000);
+
+        setInterval(
+            settleExpiredTrades,
+            3000
+        );
 
 
 
@@ -2214,7 +2587,6 @@
         }
 
 
-
         updatePriceDisplay();
 
 
@@ -2236,13 +2608,11 @@
         };
 
 
-
         const durationSelect =
             document.getElementById("tradeDuration");
 
         const payoutDisplay =
             document.getElementById("payoutDisplay");
-
 
 
         function updatePayout() {
@@ -2251,17 +2621,16 @@
                 durationSelect.value;
 
             payoutDisplay.textContent =
-                payoutRates[duration] + "%";
+                payoutRates[duration] +
+                "%";
 
         }
-
 
 
         durationSelect.addEventListener(
             "change",
             updatePayout
         );
-
 
 
         updatePayout();
@@ -2276,7 +2645,6 @@
             document.getElementById("priceChart");
 
 
-
         const priceChart =
             LightweightCharts.createChart(
                 chartContainer,
@@ -2285,7 +2653,8 @@
                     width:
                         chartContainer.clientWidth,
 
-                    height: 300,
+                    height:
+                        300,
 
                     layout: {
 
@@ -2293,7 +2662,8 @@
                             color: "#0f172a"
                         },
 
-                        textColor: "#94a3b8"
+                        textColor:
+                            "#94a3b8"
 
                     },
 
@@ -2311,69 +2681,86 @@
 
                     rightPriceScale: {
 
-                        borderColor: "#334155"
+                        borderColor:
+                            "#334155"
 
                     },
 
                     timeScale: {
 
-                        borderColor: "#334155",
+                        borderColor:
+                            "#334155",
 
-                        timeVisible: true,
+                        timeVisible:
+                            true,
 
-                        secondsVisible: false
+                        secondsVisible:
+                            false
 
                     },
 
                     crosshair: {
 
                         mode:
-                            LightweightCharts.CrosshairMode.Normal
+                            LightweightCharts
+                                .CrosshairMode
+                                .Normal
 
                     },
 
                     handleScroll: {
 
-                        mouseWheel: true,
+                        mouseWheel:
+                            true,
 
-                        pressedMouseMove: true,
+                        pressedMouseMove:
+                            true,
 
-                        horzTouchDrag: true,
+                        horzTouchDrag:
+                            true,
 
-                        vertTouchDrag: true
+                        vertTouchDrag:
+                            true
 
                     },
 
                     handleScale: {
 
-                        axisPressedMouseMove: true,
+                        axisPressedMouseMove:
+                            true,
 
-                        mouseWheel: true,
+                        mouseWheel:
+                            true,
 
-                        pinch: true
+                        pinch:
+                            true
 
                     }
 
                 }
-
             );
-
 
 
         const candleSeries =
             priceChart.addCandlestickSeries({
 
-                upColor: "#22c55e",
+                upColor:
+                    "#22c55e",
 
-                downColor: "#ef4444",
+                downColor:
+                    "#ef4444",
 
-                borderUpColor: "#22c55e",
+                borderUpColor:
+                    "#22c55e",
 
-                borderDownColor: "#ef4444",
+                borderDownColor:
+                    "#ef4444",
 
-                wickUpColor: "#22c55e",
+                wickUpColor:
+                    "#22c55e",
 
-                wickDownColor: "#ef4444"
+                wickDownColor:
+                    "#ef4444"
 
             });
 
@@ -2411,7 +2798,6 @@
         let candles = [];
 
 
-
         function createInitialCandles() {
 
             candles = [];
@@ -2425,9 +2811,13 @@
                 );
 
 
-
             const alignedNow =
-                Math.floor(now / currentTimeframeSeconds) * currentTimeframeSeconds;
+                Math.floor(
+                    now /
+                    currentTimeframeSeconds
+                ) *
+                currentTimeframeSeconds;
+
 
             for (
                 let i = 100;
@@ -2436,40 +2826,52 @@
             ) {
 
                 const time =
-                    alignedNow - (i * currentTimeframeSeconds);
+                    alignedNow -
+                    (
+                        i *
+                        currentTimeframeSeconds
+                    );
 
                 let volatility;
 
                 const tfScale =
-                    Math.sqrt(currentTimeframeSeconds / 60);
+                    Math.sqrt(
+                        currentTimeframeSeconds /
+                        60
+                    );
+
 
                 if (
                     currentAsset === "USDT/USD"
                 ) {
 
-                    volatility = 0.002 * tfScale;
+                    volatility =
+                        0.002 *
+                        tfScale;
 
                 } else {
 
                     volatility =
-                        price * 0.003 * tfScale;
+                        price *
+                        0.003 *
+                        tfScale;
 
                 }
-
 
 
                 const open =
                     price;
 
 
-
                 const close =
                     price +
                     (
-                        (Math.random() - 0.5)
-                        * volatility
+                        (
+                            Math.random() -
+                            0.5
+                        ) *
+                        volatility
                     );
-
 
 
                 const high =
@@ -2477,9 +2879,8 @@
                         open,
                         close
                     ) +
-                    Math.random()
-                    * volatility;
-
+                    Math.random() *
+                    volatility;
 
 
                 const low =
@@ -2487,31 +2888,34 @@
                         open,
                         close
                     ) -
-                    Math.random()
-                    * volatility;
-
+                    Math.random() *
+                    volatility;
 
 
                 candles.push({
 
-                    time: time,
+                    time:
+                        time,
 
-                    open: open,
+                    open:
+                        open,
 
-                    high: high,
+                    high:
+                        high,
 
-                    low: low,
+                    low:
+                        low,
 
-                    close: close
+                    close:
+                        close
 
                 });
 
 
-
-                price = close;
+                price =
+                    close;
 
             }
-
 
 
             currentPrice =
@@ -2520,11 +2924,9 @@
                 ].close;
 
 
-
             candleSeries.setData(
                 candles
             );
-
 
 
             priceChart
@@ -2532,11 +2934,9 @@
                 .fitContent();
 
 
-
             updatePriceDisplay();
 
         }
-
 
 
         createInitialCandles();
@@ -2544,42 +2944,47 @@
 
 
         /* =========================
-           LIVE  CANDLE UPDATE
+           LIVE CANDLE UPDATE
         ========================= */
 
         let lastCandleTime =
             Math.floor(
-                Date.now() / 1000 / currentTimeframeSeconds
-            ) * currentTimeframeSeconds;
-
+                Date.now() /
+                1000 /
+                currentTimeframeSeconds
+            ) *
+            currentTimeframeSeconds;
 
 
         function updateCandle() {
 
             const now =
                 Math.floor(
-                    Date.now() / 1000
+                    Date.now() /
+                    1000
                 );
-
 
 
             const bucketTime =
                 Math.floor(
-                    now / currentTimeframeSeconds
-                ) * currentTimeframeSeconds;
-
+                    now /
+                    currentTimeframeSeconds
+                ) *
+                currentTimeframeSeconds;
 
 
             const oldPrice =
                 currentPrice;
 
 
-
             let volatility;
 
-            const tfScale =
-                Math.sqrt(currentTimeframeSeconds / 60);
 
+            const tfScale =
+                Math.sqrt(
+                    currentTimeframeSeconds /
+                    60
+                );
 
 
             if (
@@ -2587,34 +2992,39 @@
             ) {
 
                 volatility =
-                    0.001 * tfScale;
+                    0.001 *
+                    tfScale;
 
             } else {
 
                 volatility =
-                    currentPrice * 0.0015 * tfScale;
+                    currentPrice *
+                    0.0015 *
+                    tfScale;
 
             }
 
 
-
             const direction =
-                marketDirections[currentAsset]
-                || "AUTO";
-
+                marketDirections[
+                    currentAsset
+                ] ||
+                "AUTO";
 
 
             let movement;
 
 
-
-            if (direction === "UP") {
+            if (
+                direction === "UP"
+            ) {
 
                 movement =
                     volatility *
                     (
                         0.25 +
-                        Math.random() * 0.75
+                        Math.random() *
+                        0.75
                     );
 
             } else if (
@@ -2625,26 +3035,28 @@
                     -volatility *
                     (
                         0.25 +
-                        Math.random() * 0.75
+                        Math.random() *
+                        0.75
                     );
 
             } else {
 
                 movement =
                     (
-                        Math.random() - 0.5
-                    ) * volatility;
+                        Math.random() -
+                        0.5
+                    ) *
+                    volatility;
 
             }
-
 
 
             currentPrice =
                 Math.max(
                     0.0001,
-                    currentPrice + movement
+                    currentPrice +
+                    movement
                 );
-
 
 
             if (
@@ -2656,12 +3068,13 @@
                     bucketTime;
 
 
-
                 const newCandle = {
 
-                    time: bucketTime,
+                    time:
+                        bucketTime,
 
-                    open: oldPrice,
+                    open:
+                        oldPrice,
 
                     high:
                         Math.max(
@@ -2675,16 +3088,15 @@
                             currentPrice
                         ),
 
-                    close: currentPrice
+                    close:
+                        currentPrice
 
                 };
-
 
 
                 candles.push(
                     newCandle
                 );
-
 
 
                 candleSeries.update(
@@ -2699,12 +3111,10 @@
                     ];
 
 
-
                 if (last) {
 
                     last.close =
                         currentPrice;
-
 
 
                     last.high =
@@ -2714,13 +3124,11 @@
                         );
 
 
-
                     last.low =
                         Math.min(
                             last.low,
                             currentPrice
                         );
-
 
 
                     candleSeries.update(
@@ -2732,17 +3140,16 @@
             }
 
 
-
             updatePriceDisplay();
 
         }
-
 
 
         setInterval(
             updateCandle,
             2000
         );
+
 
 
         /* =========================
@@ -2752,33 +3159,64 @@
         function updateCandleTimer() {
 
             const timerEl =
-                document.getElementById("candleTimer");
+                document.getElementById(
+                    "candleTimer"
+                );
 
             if (!timerEl) {
+
                 return;
+
             }
 
+
             const now =
-                Math.floor(Date.now() / 1000);
+                Math.floor(
+                    Date.now() /
+                    1000
+                );
+
 
             const bucketTime =
-                Math.floor(now / currentTimeframeSeconds) * currentTimeframeSeconds;
+                Math.floor(
+                    now /
+                    currentTimeframeSeconds
+                ) *
+                currentTimeframeSeconds;
+
 
             const secondsLeft =
-                (bucketTime + currentTimeframeSeconds) - now;
+                (
+                    bucketTime +
+                    currentTimeframeSeconds
+                ) -
+                now;
+
 
             const mins =
-                Math.floor(secondsLeft / 60);
+                Math.floor(
+                    secondsLeft /
+                    60
+                );
+
 
             const secs =
-                secondsLeft % 60;
+                secondsLeft %
+                60;
+
 
             timerEl.textContent =
-                String(mins).padStart(2, "0") + ":" + String(secs).padStart(2, "0");
+                String(mins)
+                    .padStart(2, "0") +
+                ":" +
+                String(secs)
+                    .padStart(2, "0");
 
         }
 
+
         updateCandleTimer();
+
 
         setInterval(
             updateCandleTimer,
@@ -2786,36 +3224,67 @@
         );
 
 
+
         /* =========================
            TIMEFRAME SWITCHER
         ========================= */
 
         const timeframeButtons =
-            document.querySelectorAll(".tf-btn");
+            document.querySelectorAll(
+                ".tf-btn"
+            );
 
-        timeframeButtons.forEach(function (btn) {
 
-            btn.addEventListener("click", function () {
+        timeframeButtons.forEach(
+            function (btn) {
 
-                timeframeButtons.forEach(function (b) {
-                    b.classList.remove("active");
-                });
+                btn.addEventListener(
+                    "click",
+                    function () {
 
-                btn.classList.add("active");
+                        timeframeButtons.forEach(
+                            function (b) {
 
-                currentTimeframeSeconds =
-                    parseInt(btn.dataset.seconds, 10);
+                                b.classList.remove(
+                                    "active"
+                                );
 
-                createInitialCandles();
+                            }
+                        );
 
-                lastCandleTime =
-                    Math.floor(Date.now() / 1000 / currentTimeframeSeconds) * currentTimeframeSeconds;
 
-                updateCandleTimer();
+                        btn.classList.add(
+                            "active"
+                        );
 
-            });
 
-        });
+                        currentTimeframeSeconds =
+                            parseInt(
+                                btn.dataset.seconds,
+                                10
+                            );
+
+
+                        createInitialCandles();
+
+
+                        lastCandleTime =
+                            Math.floor(
+                                Date.now() /
+                                1000 /
+                                currentTimeframeSeconds
+                            ) *
+                            currentTimeframeSeconds;
+
+
+                        updateCandleTimer();
+
+                    }
+                );
+
+            }
+        );
+
 
 
         /* =========================
@@ -2830,10 +3299,10 @@
                     assetSelect.value;
 
 
-
                 currentPrice =
-                    basePrices[currentAsset];
-
+                    basePrices[
+                        currentAsset
+                    ];
 
 
                 createInitialCandles();
@@ -2853,12 +3322,12 @@
                 chartContainer.clientWidth;
 
 
-
             if (width > 0) {
 
                 priceChart.applyOptions({
 
-                    width: width
+                    width:
+                        width
 
                 });
 
@@ -2867,12 +3336,10 @@
         }
 
 
-
         window.addEventListener(
             "resize",
             resizeChart
         );
-
 
 
         window.addEventListener(
@@ -2888,7 +3355,6 @@
         );
 
 
-
         setTimeout(
             resizeChart,
             100
@@ -2901,37 +3367,62 @@
         ========================= */
 
         const buyForm =
-            document.getElementById("buyForm");
+            document.getElementById(
+                "buyForm"
+            );
 
         const sellForm =
-            document.getElementById("sellForm");
-
+            document.getElementById(
+                "sellForm"
+            );
 
 
         const buyAmount =
-            document.getElementById("buyAmount");
+            document.getElementById(
+                "buyAmount"
+            );
 
         const buyDuration =
-            document.getElementById("buyDuration");
+            document.getElementById(
+                "buyDuration"
+            );
 
         const buyAsset =
-            document.getElementById("buyAsset");
+            document.getElementById(
+                "buyAsset"
+            );
 
+        const buyCurrency =
+            document.getElementById(
+                "buyCurrency"
+            );
 
 
         const sellAmount =
-            document.getElementById("sellAmount");
+            document.getElementById(
+                "sellAmount"
+            );
 
         const sellDuration =
-            document.getElementById("sellDuration");
+            document.getElementById(
+                "sellDuration"
+            );
 
         const sellAsset =
-            document.getElementById("sellAsset");
+            document.getElementById(
+                "sellAsset"
+            );
 
+        const sellCurrency =
+            document.getElementById(
+                "sellCurrency"
+            );
 
 
         const tradeAmount =
-            document.getElementById("tradeAmount");
+            document.getElementById(
+                "tradeAmount"
+            );
 
 
 
@@ -2941,14 +3432,16 @@
                 tradeAmount.value;
 
 
-
             buyDuration.value =
                 durationSelect.value;
 
 
-
             buyAsset.value =
                 currentAsset;
+
+
+            buyCurrency.value =
+                selectedCurrency;
 
         }
 
@@ -2960,14 +3453,16 @@
                 tradeAmount.value;
 
 
-
             sellDuration.value =
                 durationSelect.value;
 
 
-
             sellAsset.value =
                 currentAsset;
+
+
+            sellCurrency.value =
+                selectedCurrency;
 
         }
 
@@ -2983,12 +3478,10 @@
             );
 
 
-
         const confirmText =
             document.getElementById(
                 "confirmText"
             );
-
 
 
         const cancelConfirm =
@@ -2997,15 +3490,14 @@
             );
 
 
-
         const confirmTrade =
             document.getElementById(
                 "confirmTrade"
             );
 
 
-
-        let pendingForm = null;
+        let pendingForm =
+            null;
 
 
 
@@ -3016,33 +3508,24 @@
                 event.preventDefault();
 
 
-
                 prepareBuyForm();
-
 
 
                 pendingForm =
                     buyForm;
 
 
-
                 confirmText.innerHTML =
-                    "Confirm BUY trade of <strong>$"
-                    +
-                    tradeAmount.value
-                    +
-                    "</strong> on <strong>"
-                    +
-                    currentAsset
-                    +
-                    "</strong> for <strong>"
-                    +
+                    "Confirm BUY trade of <strong>" +
+                    getCurrencySymbol() +
+                    tradeAmount.value +
+                    "</strong> on <strong>" +
+                    currentAsset +
+                    "</strong> for <strong>" +
                     durationSelect.options[
                         durationSelect.selectedIndex
-                    ].text
-                    +
+                    ].text +
                     "</strong>?";
-
 
 
                 confirmModal.classList.add(
@@ -3061,33 +3544,24 @@
                 event.preventDefault();
 
 
-
                 prepareSellForm();
-
 
 
                 pendingForm =
                     sellForm;
 
 
-
                 confirmText.innerHTML =
-                    "Confirm SELL trade of <strong>$"
-                    +
-                    tradeAmount.value
-                    +
-                    "</strong> on <strong>"
-                    +
-                    currentAsset
-                    +
-                    "</strong> for <strong>"
-                    +
+                    "Confirm SELL trade of <strong>" +
+                    getCurrencySymbol() +
+                    tradeAmount.value +
+                    "</strong> on <strong>" +
+                    currentAsset +
+                    "</strong> for <strong>" +
                     durationSelect.options[
                         durationSelect.selectedIndex
-                    ].text
-                    +
+                    ].text +
                     "</strong>?";
-
 
 
                 confirmModal.classList.add(
@@ -3108,8 +3582,8 @@
                 );
 
 
-
-                pendingForm = null;
+                pendingForm =
+                    null;
 
             }
         );
@@ -3145,8 +3619,8 @@
                     );
 
 
-
-                    pendingForm = null;
+                    pendingForm =
+                        null;
 
                 }
 
@@ -3158,5 +3632,3 @@
 </body>
 
 </html>
-
-

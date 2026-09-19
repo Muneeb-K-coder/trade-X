@@ -1,3 +1,4 @@
+
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -41,10 +42,24 @@ class TradingAccount(models.Model):
         on_delete=models.CASCADE
     )
 
+    # Old balance field — existing data compatibility ke liye rakha hai
     balance = models.DecimalField(
         max_digits=12,
         decimal_places=2,
-        default= 0.00
+        default=0.00
+    )
+
+    # Separate currency balances
+    balance_pkr = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0.00
+    )
+
+    balance_usd = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0.00
     )
 
     credit_score = models.PositiveIntegerField(
@@ -88,6 +103,11 @@ class Trade(models.Model):
         ("SELL", "SELL"),
     ]
 
+    CURRENCY_CHOICES = [
+        ("USD", "USD"),
+        ("PKR", "PKR"),
+    ]
+
     STATUS_CHOICES = [
         ("OPEN", "OPEN"),
         ("WIN", "WIN"),
@@ -115,6 +135,12 @@ class Trade(models.Model):
     side = models.CharField(
         max_length=4,
         choices=SIDE_CHOICES
+    )
+
+    currency = models.CharField(
+        max_length=3,
+        choices=CURRENCY_CHOICES,
+        default="USD"
     )
 
     amount = models.DecimalField(
@@ -187,6 +213,11 @@ class Transaction(models.Model):
         ("WITHDRAW", "WITHDRAW"),
     ]
 
+    CURRENCY_CHOICES = [
+        ("USD", "USD"),
+        ("PKR", "PKR"),
+    ]
+
     STATUS_CHOICES = [
         ("PENDING", "PENDING"),
         ("APPROVED", "APPROVED"),
@@ -201,6 +232,12 @@ class Transaction(models.Model):
     transaction_type = models.CharField(
         max_length=10,
         choices=TYPE_CHOICES
+    )
+
+    currency = models.CharField(
+        max_length=3,
+        choices=CURRENCY_CHOICES,
+        default="USD"
     )
 
     amount = models.DecimalField(
@@ -292,7 +329,8 @@ class MarketControl(models.Model):
         pair_name = self.pair.symbol if self.pair else self.asset
         return f"{pair_name} - {self.direction}"
 
-    # ==========================================
+
+# ==========================================
 # PLATFORM CONTROL
 # ==========================================
 
@@ -312,3 +350,4 @@ class PlatformControl(models.Model):
 
     def __str__(self):
         return "Platform Control"
+
