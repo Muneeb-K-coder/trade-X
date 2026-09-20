@@ -263,6 +263,28 @@
             background: #b91c1c;
         }
 
+        /* ==========================================
+           ADMIN TRADE WIN / LOSS BUTTONS
+           ========================================== */
+
+        .win-btn {
+            background: #166534;
+            color: white;
+        }
+
+        .win-btn:hover {
+            background: #15803d;
+        }
+
+        .loss-btn {
+            background: #991b1b;
+            color: white;
+        }
+
+        .loss-btn:hover {
+            background: #b91c1c;
+        }
+
         .empty {
             text-align: center;
             color: #64748b;
@@ -599,7 +621,11 @@
                                     </td>
 
                                     <td>
-                                        ${{ txn.amount }}
+                                        {% if txn.currency == "PKR" %}
+                                            ₨{{ txn.amount }} PKR
+                                        {% else %}
+                                            ${{ txn.amount }} USD
+                                        {% endif %}
                                     </td>
 
                                     <td>
@@ -771,7 +797,11 @@
                                     </td>
 
                                     <td>
-                                        ${{ txn.amount }}
+                                        {% if txn.currency == "PKR" %}
+                                            ₨{{ txn.amount }} PKR
+                                        {% else %}
+                                            ${{ txn.amount }} USD
+                                        {% endif %}
                                     </td>
 
                                     <td>
@@ -889,9 +919,39 @@
 
                                         {% if trade.status == "OPEN" %}
 
-                                            <span class="badge open">
-                                                OPEN
-                                            </span>
+                                            <form
+                                                method="POST"
+                                                action="{% url 'admin_trade_result' trade.id 'WIN' %}"
+                                                style="display:inline;"
+                                            >
+
+                                                {% csrf_token %}
+
+                                                <button
+                                                    type="submit"
+                                                    class="btn win-btn"
+                                                >
+                                                    WIN
+                                                </button>
+
+                                            </form>
+
+                                            <form
+                                                method="POST"
+                                                action="{% url 'admin_trade_result' trade.id 'LOSS' %}"
+                                                style="display:inline; margin-left:5px;"
+                                            >
+
+                                                {% csrf_token %}
+
+                                                <button
+                                                    type="submit"
+                                                    class="btn loss-btn"
+                                                >
+                                                    LOSS
+                                                </button>
+
+                                            </form>
 
                                         {% elif trade.status == "WIN" %}
 

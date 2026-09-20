@@ -1,3 +1,4 @@
+
 from datetime import timedelta
 from decimal import Decimal, InvalidOperation
 
@@ -249,6 +250,40 @@ def create_binary_trade(request, side):
         messages.error(
             request,
             "Enter a valid trade amount."
+        )
+
+        return redirect("dashboard")
+
+    # ==========================================
+    # TRADE AMOUNT LIMITS
+    # ==========================================
+
+    if currency == "PKR":
+
+        min_amount = Decimal("1000")
+        max_amount = Decimal("1000000")
+
+    else:
+
+        min_amount = Decimal("10")
+        max_amount = Decimal("3000")
+
+    if amount < min_amount:
+
+        messages.error(
+            request,
+            f"Minimum trade amount is "
+            f"{currency_symbol}{min_amount:,.2f}."
+        )
+
+        return redirect("dashboard")
+
+    if amount > max_amount:
+
+        messages.error(
+            request,
+            f"Maximum trade amount is "
+            f"{currency_symbol}{max_amount:,.2f}."
         )
 
         return redirect("dashboard")
@@ -1153,3 +1188,4 @@ def my_account(request):
             "total_profit_loss": total_profit_loss,
         }
     )
+

@@ -1,4 +1,4 @@
-
+from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.models import User
@@ -730,3 +730,109 @@ def market_control(request):
         }
     )
 
+
+# ==========================================
+# ADMIN MANUAL TRADE RESULT
+# ==========================================
+
+@staff_member_required
+def admin_trade_result(request, trade_id, result):
+
+    if request.method != "POST":
+        return redirect("admin_dashboard")
+
+    trade = get_object_or_404(
+        Trade,
+        id=trade_id
+    )
+
+    # Sirf OPEN trade ka result set hoga
+    if trade.status != "OPEN":
+
+        messages.warning(
+            request,
+            "This trade has already been processed."
+        )
+
+        return redirect("admin_dashboard")
+
+    if result not in ["WIN", "LOSS"]:
+
+        messages.error(
+            request,
+            "Invalid trade result."
+        )
+
+        return redirect("admin_dashboard")
+
+    with db_transaction.atomic():
+
+        account, created = TradingAccount.objects.get_or_create(
+            user=trade.user,
+            defaults={
+                "balance": 0.00,
+                "balance_pkr": 0.00,
+                "balance_usd": 0.00,
+                "credit_score": 100
+            }
+        )
+
+        # ==========================================
+        # WIN
+        # ==========================================
+
+        if result == "WIN":
+
+            payout_rates = {
+                60:  "0.30",
+                120: "0.30",
+                180: "0.60",
+                240: "0.60"
+            }
+
+            payout_rate = Decimal(
+                payout_rates.get(
+                    trade.duration_seconds,
+                    "0.30"
+                )
+            )
+
+            profit = trade.amount * payout_rate
+
+            trade.profit_loss = profit
+            trade.status = "WIN"
+
+            if trade.currency == "PKR":
+
+                account.balance_pkr += (
+                    trade.amount + profit
+                )
+
+            else:
+
+                account.balance_usd += (
+                    trade.amount + profit
+                )
+
+            account.save()
+
+        # ==========================================
+        # LOSS
+        # ==========================================
+
+        elif result == "LOSS":
+
+            trade.profit_loss = -trade.amount
+            trade.status = "LOSS"
+
+            # Trade amount pehle hi balance se deduct ho chuka hai.
+            # Isliye LOSS par balance mein kuch add nahi hoga.
+
+        trade.save()
+
+    messages.success(
+        request,
+        f"Trade for {trade.user.username} marked as {result}."
+    )
+
+    return redirect("admin_dashboard")

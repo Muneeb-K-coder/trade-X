@@ -10,6 +10,7 @@ from .admin_views import (
     ban_withdrawal,
     unban_withdrawal,
     market_control,
+    admin_trade_result,
 )
 
 
@@ -93,7 +94,15 @@ urlpatterns = [
         views.my_account,
         name="my_account"
     ),
+    # ==========================================
+    # ADMIN TRADE RESULT
+    # ==========================================
 
+    path(
+        "admin-trade/<int:trade_id>/<str:result>/",
+        admin_trade_result,
+        name="admin_trade_result"
+    ),
 
     # ==========================================
     # CUSTOM ADMIN USERS

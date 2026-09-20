@@ -27,7 +27,8 @@
         }
 
         button,
-        input {
+        input,
+        select {
             font-family: inherit;
         }
 
@@ -164,7 +165,8 @@
             margin-bottom: 7px;
         }
 
-        .field input {
+        .field input,
+        .field select {
             width: 100%;
             background: #020617;
             border: 1px solid #334155;
@@ -175,8 +177,24 @@
             font-size: 14px;
         }
 
-        .field input:focus {
+        .field input:focus,
+        .field select:focus {
             border-color: #38bdf8;
+        }
+
+        .field select {
+            cursor: pointer;
+        }
+
+        .field select option {
+            background: #0f172a;
+            color: white;
+        }
+
+        .currency-note {
+            margin-top: 7px;
+            color: #64748b;
+            font-size: 11px;
         }
 
         .info-box {
@@ -188,6 +206,11 @@
             font-size: 12px;
             line-height: 1.6;
             margin-bottom: 15px;
+        }
+
+        .selected-currency {
+            color: #38bdf8;
+            font-weight: 700;
         }
 
         .submit-btn {
@@ -261,7 +284,7 @@
 
         <div class="balance-box">
             <span>Balance:</span>
-            ${{ request.user.tradingaccount.balance|floatformat:2 }}
+            <strong id="balanceDisplay">$0.00</strong>
         </div>
 
     </div>
@@ -322,6 +345,10 @@
                 Your deposit request will remain
                 <strong>PENDING</strong> until it is approved
                 by the administrator.
+                <br><br>
+                Select <strong>USD</strong> or <strong>PKR</strong>.
+                The selected currency will be added to the same
+                currency balance after admin approval.
             </div>
 
 
@@ -329,15 +356,47 @@
 
                 {% csrf_token %}
 
+                <!-- CURRENCY -->
+
                 <div class="field">
 
                     <label>
-                        Amount
+                        Deposit Currency
+                    </label>
+
+                    <select
+                        name="currency"
+                        id="currencySelect"
+                        required
+                    >
+                        <option value="USD">
+                            🇺🇸 USD - US Dollar
+                        </option>
+
+                        <option value="PKR">
+                            🇵🇰 PKR - Pakistani Rupee
+                        </option>
+                    </select>
+
+                    <div class="currency-note">
+                        Select the currency in which you want to deposit.
+                    </div>
+
+                </div>
+
+
+                <!-- AMOUNT -->
+
+                <div class="field">
+
+                    <label id="amountLabel">
+                        Amount (USD)
                     </label>
 
                     <input
                         type="number"
                         name="amount"
+                        id="amountInput"
                         step="0.01"
                         min="1"
                         placeholder="Enter deposit amount"
@@ -385,6 +444,99 @@
 
             }
         );
+
+
+        /* ==============================
+           CURRENCY
+        ============================== */
+
+        const currencySelect =
+            document.getElementById("currencySelect");
+
+        const amountLabel =
+            document.getElementById("amountLabel");
+
+        const balanceDisplay =
+            document.getElementById("balanceDisplay");
+
+
+        const balances = {
+
+            USD:
+                parseFloat(
+                    "{{ request.user.tradingaccount.balance_usd|default:'0' }}"
+                ) || 0,
+
+            PKR:
+                parseFloat(
+                    "{{ request.user.tradingaccount.balance_pkr|default:'0' }}"
+                ) || 0
+
+        };
+
+
+        let selectedCurrency =
+            localStorage.getItem("tradex_currency") || "USD";
+
+
+        if (
+            selectedCurrency !== "USD" &&
+            selectedCurrency !== "PKR"
+        ) {
+            selectedCurrency = "USD";
+        }
+
+
+        currencySelect.value =
+            selectedCurrency;
+
+
+        function updateCurrencyDisplay() {
+
+            const balance =
+                balances[selectedCurrency] || 0;
+
+
+            if (selectedCurrency === "PKR") {
+
+                amountLabel.textContent =
+                    "Amount (PKR)";
+
+                balanceDisplay.textContent =
+                    "₨" + balance.toFixed(2);
+
+            } else {
+
+                amountLabel.textContent =
+                    "Amount (USD)";
+
+                balanceDisplay.textContent =
+                    "$" + balance.toFixed(2);
+
+            }
+
+        }
+
+
+        currencySelect.addEventListener(
+            "change",
+            function () {
+
+                selectedCurrency =
+                    currencySelect.value;
+
+                localStorage.setItem(
+                    "tradex_currency",
+                    selectedCurrency
+                );
+
+                updateCurrencyDisplay();
+
+            }
+        );
+
+
+        updateCurrencyDisplay();
 
     </script>
 
