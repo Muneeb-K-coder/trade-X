@@ -51,45 +51,24 @@ PAYOUT_RATES = {
 
 
 # ==========================================
-# CURRENCY HELPERS
+# CURRENCY
+# PKR ONLY
 # ==========================================
 
 def get_selected_currency(request):
-
-    # Default currency is now PKR
-    currency = request.POST.get(
-        "currency",
-        "PKR"
-    )
-
-    if currency not in ["USD", "PKR"]:
-        currency = "PKR"
-
-    return currency
+    return "PKR"
 
 
-def get_balance(account, currency):
-
-    if currency == "PKR":
-        return account.balance_pkr
-
-    return account.balance_usd
+def get_balance(account, currency="PKR"):
+    return account.balance_pkr
 
 
 def set_balance(account, currency, amount):
-
-    if currency == "PKR":
-        account.balance_pkr = amount
-    else:
-        account.balance_usd = amount
+    account.balance_pkr = amount
 
 
-def get_currency_symbol(currency):
-
-    if currency == "PKR":
-        return "₨"
-
-    return "$"
+def get_currency_symbol(currency="PKR"):
+    return "₨"
 
 
 # ==========================================
@@ -163,14 +142,11 @@ def create_binary_trade(request, side):
     )
 
     # ==========================================
-    # CURRENCY
+    # PKR ONLY
     # ==========================================
 
-    currency = get_selected_currency(request)
-
-    currency_symbol = get_currency_symbol(
-        currency
-    )
+    currency = "PKR"
+    currency_symbol = "₨"
 
     # ==========================================
     # GLOBAL TRADING CONTROL
@@ -267,22 +243,15 @@ def create_binary_trade(request, side):
     # TRADE AMOUNT LIMITS
     # ==========================================
 
-    if currency == "PKR":
-
-        min_amount = Decimal("1000")
-        max_amount = Decimal("1000000")
-
-    else:
-
-        min_amount = Decimal("10")
-        max_amount = Decimal("3000")
+    min_amount = Decimal("1000")
+    max_amount = Decimal("1000000")
 
     if amount < min_amount:
 
         messages.error(
             request,
             f"Minimum trade amount is "
-            f"{currency_symbol}{min_amount:,.2f}."
+            f"₨{min_amount:,.2f}."
         )
 
         return redirect("dashboard")
@@ -292,21 +261,21 @@ def create_binary_trade(request, side):
         messages.error(
             request,
             f"Maximum trade amount is "
-            f"{currency_symbol}{max_amount:,.2f}."
+            f"₨{max_amount:,.2f}."
         )
 
         return redirect("dashboard")
 
     current_balance = get_balance(
         account,
-        currency
+        "PKR"
     )
 
     if amount > current_balance:
 
         messages.error(
             request,
-            f"Insufficient {currency} balance."
+            "Insufficient PKR balance."
         )
 
         return redirect("dashboard")
@@ -352,14 +321,25 @@ def create_binary_trade(request, side):
     entry_price = get_demo_price(request)
 
     # ==========================================
+    # FIND PAIR
+    # ==========================================
+
+    from .models import TradingPair
+
+    pair = TradingPair.objects.filter(
+        symbol=asset
+    ).first()
+
+    # ==========================================
     # CREATE TRADE
     # ==========================================
 
     Trade.objects.create(
         user=request.user,
+        pair=pair,
         asset=asset,
         side=side,
-        currency=currency,
+        currency="PKR",
         amount=amount,
         price=entry_price,
         duration_seconds=duration_seconds,
@@ -374,9 +354,12 @@ def create_binary_trade(request, side):
 
     set_balance(
         account,
-        currency,
+        "PKR",
         current_balance - amount
     )
+
+    # Keep old main balance synchronized
+    account.balance = current_balance - amount
 
     account.save()
 
@@ -407,11 +390,11 @@ def create_binary_trade(request, side):
     messages.success(
         request,
         f"{asset} | {direction} | "
-        f"{currency} | "
+        f"PKR | "
         f"{duration_seconds}s | "
         f"{payout_percent}% payout | "
-        f"Potential Profit: {currency_symbol}{potential_profit} | "
-        f"Potential Return: {currency_symbol}{potential_return}"
+        f"Potential Profit: ₨{potential_profit} | "
+        f"Potential Return: ₨{potential_return}"
     )
 
     return redirect("dashboard")
@@ -575,11 +558,8 @@ def settle_trade(request, trade_id):
                 }
             )
 
-            currency = trade.currency or "USD"
-
-            currency_symbol = get_currency_symbol(
-                currency
-            )
+            currency = "PKR"
+            currency_symbol = "₨"
 
             # ==========================================
             # WIN
@@ -599,23 +579,29 @@ def settle_trade(request, trade_id):
 
                 current_balance = get_balance(
                     account,
-                    currency
+                    "PKR"
                 )
 
-                set_balance(
-                    account,
-                    currency,
+                new_balance = (
                     current_balance
                     + trade.amount
                     + profit
                 )
 
+                set_balance(
+                    account,
+                    "PKR",
+                    new_balance
+                )
+
+                account.balance = new_balance
+
                 messages.success(
                     request,
                     f"{trade.asset} | "
                     f"{trade.side} | "
-                    f"{currency} | WIN | "
-                    f"+{currency_symbol}{profit} profit | "
+                    f"PKR | WIN | "
+                    f"+₨{profit} profit | "
                     f"Market: {market_direction} | "
                     f"Entry: {trade.price} | "
                     f"Expiry: {expiry_price}"
@@ -633,8 +619,8 @@ def settle_trade(request, trade_id):
                     request,
                     f"{trade.asset} | "
                     f"{trade.side} | "
-                    f"{currency} | LOSS | "
-                    f"-{currency_symbol}{trade.amount} | "
+                    f"PKR | LOSS | "
+                    f"-₨{trade.amount} | "
                     f"Market: {market_direction} | "
                     f"Entry: {trade.price} | "
                     f"Expiry: {expiry_price}"
@@ -795,11 +781,8 @@ def deposit(request):
 
     if request.method == "POST":
 
-        currency = get_selected_currency(request)
-
-        currency_symbol = get_currency_symbol(
-            currency
-        )
+        currency = "PKR"
+        currency_symbol = "₨"
 
         try:
 
@@ -827,15 +810,14 @@ def deposit(request):
             user=request.user,
             transaction_type="DEPOSIT",
             amount=amount,
-            currency=currency,
+            currency="PKR",
             status="PENDING"
         )
 
         messages.success(
             request,
             f"Deposit request of "
-            f"{currency_symbol}{amount} "
-            f"{currency} submitted for admin approval."
+            f"₨{amount} PKR submitted for admin approval."
         )
 
         return redirect("dashboard")
@@ -870,15 +852,12 @@ def withdraw(request):
 
         account.refresh_from_db()
 
-        currency = get_selected_currency(request)
-
-        currency_symbol = get_currency_symbol(
-            currency
-        )
+        currency = "PKR"
+        currency_symbol = "₨"
 
         current_balance = get_balance(
             account,
-            currency
+            "PKR"
         )
 
         # ==========================================
@@ -958,7 +937,7 @@ def withdraw(request):
 
             messages.error(
                 request,
-                f"Insufficient {currency} balance."
+                "Insufficient PKR balance."
             )
 
             return redirect("withdraw")
@@ -1029,7 +1008,7 @@ def withdraw(request):
             user=request.user,
             transaction_type="WITHDRAW",
             amount=amount,
-            currency=currency,
+            currency="PKR",
             status="PENDING",
             account_title=account_title,
             account_holder_name=account_holder_name,
@@ -1039,8 +1018,7 @@ def withdraw(request):
         messages.success(
             request,
             f"Withdrawal request of "
-            f"{currency_symbol}{amount} "
-            f"{currency} submitted for admin approval."
+            f"₨{amount} PKR submitted for admin approval."
         )
 
         return redirect("dashboard")
