@@ -1045,7 +1045,7 @@
                     🇺🇸 USD
                 </option>
 
-                <option value="PKR">
+                <option value="PKR" selected>
                     🇵🇰 PKR
                 </option>
             </select>
@@ -1055,7 +1055,7 @@
             </span>
 
             <strong id="balanceDisplay">
-                $0.00
+                ₨0.00
             </strong>
 
         </div>
@@ -2138,8 +2138,9 @@
         };
 
 
-       let selectedCurrency = localStorage.getItem("tradex_currency") || "USD";
-currencySelect.value = selectedCurrency;
+        let selectedCurrency = "PKR";
+
+        currencySelect.value = "PKR";
 
 
         function getCurrencySymbol() {
@@ -2167,11 +2168,23 @@ currencySelect.value = selectedCurrency;
         }
 
 
-     currencySelect.addEventListener("change", function () {
-    selectedCurrency = currencySelect.value;
-    localStorage.setItem("tradex_currency", selectedCurrency);
-    updateBalanceDisplay();
-});
+        updateBalanceDisplay();
+
+
+        currencySelect.addEventListener("change", function () {
+
+            selectedCurrency =
+                currencySelect.value;
+
+            localStorage.setItem(
+                "tradex_currency",
+                selectedCurrency
+            );
+
+            updateBalanceDisplay();
+
+        });
+
 
         /* =========================
            SIDE MENU
