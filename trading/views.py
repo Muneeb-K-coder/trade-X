@@ -1,4 +1,3 @@
-
 from datetime import timedelta
 from decimal import Decimal, InvalidOperation
 
@@ -56,18 +55,21 @@ PAYOUT_RATES = {
 # ==========================================
 
 def get_selected_currency(request):
+
+    # Default currency is now PKR
     currency = request.POST.get(
         "currency",
-        "USD"
-    ).upper()
+        "PKR"
+    )
 
     if currency not in ["USD", "PKR"]:
-        currency = "USD"
+        currency = "PKR"
 
     return currency
 
 
 def get_balance(account, currency):
+
     if currency == "PKR":
         return account.balance_pkr
 
@@ -75,6 +77,7 @@ def get_balance(account, currency):
 
 
 def set_balance(account, currency, amount):
+
     if currency == "PKR":
         account.balance_pkr = amount
     else:
@@ -82,6 +85,7 @@ def set_balance(account, currency, amount):
 
 
 def get_currency_symbol(currency):
+
     if currency == "PKR":
         return "₨"
 
@@ -93,6 +97,7 @@ def get_currency_symbol(currency):
 # ==========================================
 
 def get_payout_rate(duration_seconds):
+
     return PAYOUT_RATES.get(
         duration_seconds,
         Decimal("30.00")
@@ -106,6 +111,7 @@ def get_payout_rate(duration_seconds):
 def get_demo_price(request, asset=None):
 
     if asset is None:
+
         asset = request.POST.get(
             "asset",
             "BTC/PKR"
@@ -161,7 +167,10 @@ def create_binary_trade(request, side):
     # ==========================================
 
     currency = get_selected_currency(request)
-    currency_symbol = get_currency_symbol(currency)
+
+    currency_symbol = get_currency_symbol(
+        currency
+    )
 
     # ==========================================
     # GLOBAL TRADING CONTROL
@@ -522,21 +531,15 @@ def settle_trade(request, trade_id):
             if market_direction == "UP":
 
                 if trade.side == "BUY":
-
                     result = "WIN"
-
                 else:
-
                     result = "LOSS"
 
             elif market_direction == "DOWN":
 
                 if trade.side == "SELL":
-
                     result = "WIN"
-
                 else:
-
                     result = "LOSS"
 
             else:
@@ -548,21 +551,15 @@ def settle_trade(request, trade_id):
                 if trade.side == "BUY":
 
                     if expiry_price > trade.price:
-
                         result = "WIN"
-
                     else:
-
                         result = "LOSS"
 
                 else:
 
                     if expiry_price < trade.price:
-
                         result = "WIN"
-
                     else:
-
                         result = "LOSS"
 
             # ==========================================
@@ -714,7 +711,6 @@ def settle_expired_trades(request):
                 )
 
                 if result in ["WIN", "LOSS"]:
-
                     settled += 1
 
             except Exception:
@@ -800,6 +796,7 @@ def deposit(request):
     if request.method == "POST":
 
         currency = get_selected_currency(request)
+
         currency_symbol = get_currency_symbol(
             currency
         )
@@ -874,6 +871,7 @@ def withdraw(request):
         account.refresh_from_db()
 
         currency = get_selected_currency(request)
+
         currency_symbol = get_currency_symbol(
             currency
         )
@@ -1188,4 +1186,3 @@ def my_account(request):
             "total_profit_loss": total_profit_loss,
         }
     )
-

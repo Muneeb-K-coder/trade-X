@@ -69,8 +69,16 @@ def admin_dashboard(request):
                 if txn.transaction_type == "DEPOSIT":
 
                     if txn.currency == "PKR":
+
+                        # PKR balance update
                         account.balance_pkr += txn.amount
+
+                        # Main balance bhi update hoga
+                        # taake user ko balance show ho
+                        account.balance += txn.amount
+
                     else:
+
                         account.balance_usd += txn.amount
 
                     account.save()
@@ -91,8 +99,11 @@ def admin_dashboard(request):
                 elif txn.transaction_type == "WITHDRAW":
 
                     if txn.currency == "PKR":
+
                         current_balance = account.balance_pkr
+
                     else:
+
                         current_balance = account.balance_usd
 
                     if txn.amount > current_balance:
@@ -105,8 +116,14 @@ def admin_dashboard(request):
                     else:
 
                         if txn.currency == "PKR":
+
                             account.balance_pkr -= txn.amount
+
+                            # Main balance bhi minus hoga
+                            account.balance -= txn.amount
+
                         else:
+
                             account.balance_usd -= txn.amount
 
                         account.save()
@@ -784,7 +801,7 @@ def admin_trade_result(request, trade_id, result):
         if result == "WIN":
 
             payout_rates = {
-                60:  "0.30",
+                60: "0.30",
                 120: "0.30",
                 180: "0.60",
                 240: "0.60"
@@ -805,6 +822,11 @@ def admin_trade_result(request, trade_id, result):
             if trade.currency == "PKR":
 
                 account.balance_pkr += (
+                    trade.amount + profit
+                )
+
+                # Main balance bhi update hoga
+                account.balance += (
                     trade.amount + profit
                 )
 
